@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🐻熊啊熊啊熊📷 · 图片画质增强</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
     </script>
@@ -46,14 +46,24 @@
         body {
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
             background: var(--bg); background-image: var(--bg-gradient);
-            min-height: 100vh; color: var(--text);
+            height: 100vh; overflow: hidden;
+            color: var(--text);
             display: flex; justify-content: center; align-items: flex-start;
-            padding: 16px 16px 40px; transition: background 0.3s, color 0.3s;
+            padding: 16px 16px 0;
+            transition: background 0.3s, color 0.3s;
             -webkit-tap-highlight-color: transparent;
             user-select: none; -webkit-user-select: none;
         }
-        .app-container { width: 100%; max-width: 1300px; display: flex; flex-direction: column; gap: 18px; }
-        .header { display: flex; align-items: center; gap: 16px; padding: 8px 4px; }
+        .app-container {
+            width: 100%; max-width: 1300px;
+            height: 100%; display: flex; flex-direction: column;
+            gap: 12px;
+        }
+        .header {
+            display: flex; align-items: center; gap: 16px;
+            padding: 8px 4px 0;
+            flex-shrink: 0;
+        }
         .theme-toggle {
             width: 44px; height: 44px; border-radius: 50%;
             border: 1.5px solid var(--border); background: var(--surface2);
@@ -71,14 +81,21 @@
         }
 
         .sticky-preview {
-            position: sticky; top: 16px; z-index: 100; width: 100%;
+            position: relative;
+            flex-shrink: 0;
             background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
             border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 16px; box-shadow: var(--shadow-lg); margin-bottom: 4px; transition: background 0.3s;
+            padding: 16px; box-shadow: var(--shadow-lg);
+            transition: background 0.3s;
+            display: flex; flex-direction: column;
         }
-        .preview-title { font-size: 1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+        .preview-title {
+            font-size: 1rem; font-weight: 600; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px; color: var(--text);
+        }
         .preview-container {
-            position: relative; width: 100%; height: 50vh; max-height: 600px; min-height: 280px;
+            position: relative;
+            width: 100%; height: 45vh; max-height: 550px; min-height: 260px;
             background: var(--preview-bg); border-radius: var(--radius-sm); overflow: hidden;
             border: 1px solid var(--border);
         }
@@ -88,8 +105,8 @@
         }
         .compare-view {
             position: relative; width: 100%; height: 100%; display: flex; align-items: center;
-            justify-content: center; overflow: hidden; transform-origin: center center;
-            transition: transform 0.2s ease;
+            justify-content: center; overflow: hidden;
+            transform-origin: center center; transition: transform 0.15s ease;
         }
         .compare-view img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .compare-view .after-layer {
@@ -115,7 +132,6 @@
             font-weight: bold; box-shadow: 0 4px 16px rgba(0,0,0,0.5); pointer-events: none;
         }
 
-        /* 角落小标签透明样式 */
         .corner-label {
             position: absolute; z-index: 25; padding: 3px 10px; border-radius: 12px;
             font-size: 0.7rem; font-weight: 600; white-space: nowrap;
@@ -124,30 +140,48 @@
         }
         .corner-label.after { color: #51cf66; }
 
-        .zoom-controls { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; z-index: 30; }
+        .zoom-controls {
+            position: absolute; top: 12px; right: 12px;
+            display: flex; gap: 4px; z-index: 40;
+        }
         .zoom-btn {
-            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid var(--border);
             background: var(--surface); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            cursor: pointer; font-size: 1rem; font-weight: bold; display: flex; align-items: center;
+            cursor: pointer; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center;
             justify-content: center; color: var(--text); transition: var(--transition);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .zoom-btn:hover { background: var(--surface2); border-color: var(--accent); }
 
-        .control-area { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: start; }
-        @media (max-width: 960px) { .control-area { grid-template-columns: 1fr; } .sticky-preview { top: 8px; } .preview-container { height: 40vh; } .logo { font-size: 1.4rem; } }
+        .control-area {
+            flex: 1 1 auto; overflow-y: auto; min-height: 0;
+            display: grid; grid-template-columns: 420px 1fr; gap: 14px;
+            align-items: start;
+            padding-bottom: 16px;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .control-area::-webkit-scrollbar { width: 5px; }
+        .control-area::-webkit-scrollbar-track { background: transparent; }
+        .control-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        @media (max-width: 960px) {
+            .control-area { grid-template-columns: 1fr; }
+            .preview-container { height: 35vh; }
+            .logo { font-size: 1.4rem; }
+        }
         .card {
             background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
-            box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px; transition: background 0.3s;
+            border: 1px solid var(--border); border-radius: var(--radius); padding: 18px;
+            box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; transition: background 0.3s;
         }
-        .card-title { font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .card-title { font-size: 0.95rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
         .card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); box-shadow: 0 0 10px var(--accent3); }
 
         .action-buttons-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* 修改占比：上传30% 文件列表70% */
         .upload-file-row { display: flex; gap: 12px; align-items: stretch; }
-        .upload-box { flex: 1; display: flex; align-items: stretch; }
-        .file-list-box { flex: 1; display: flex; flex-direction: column; }
+        .upload-box { flex: 3; display: flex; align-items: stretch; }
+        .file-list-box { flex: 7; display: flex; flex-direction: column; }
         .upload-zone {
             border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 14px 12px;
             text-align: center; cursor: pointer; transition: var(--transition);
@@ -160,33 +194,33 @@
         .upload-zone .upload-hint { color: var(--text2); font-size: 0.72rem; margin-top: 4px; }
         .upload-zone input[type="file"] { display: none; }
         .file-list {
-            flex: 1; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+            flex: 1; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
             padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
             border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px;
             background: var(--surface2); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
         }
         .file-list::-webkit-scrollbar { width: 5px; } .file-list::-webkit-scrollbar-track { background: transparent; } .file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-        .file-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface); border-radius: 10px; cursor: pointer; transition: var(--transition); border: 1.5px solid transparent; font-size: 0.8rem; }
+        .file-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface); border-radius: 10px; cursor: pointer; transition: var(--transition); border: 1.5px solid transparent; font-size: 0.78rem; }
         .file-item:hover { border-color: var(--accent); }
         .file-item.active { border-color: var(--accent3); background: rgba(0,206,201,0.08); box-shadow: 0 0 16px rgba(0,206,201,0.1); }
-        .file-item .thumb { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--preview-bg); border: 1px solid var(--border); }
+        .file-item .thumb { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--preview-bg); border: 1px solid var(--border); }
         .file-item .info { flex: 1; min-width: 0; }
-        .file-item .info .name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .file-item .info .meta { font-size: 0.7rem; color: var(--text2); }
-        .file-item .remove-btn { width: 24px; height: 24px; border-radius: 50%; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 0.8rem; transition: var(--transition); }
+        .file-item .info .name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.7rem; }
+        .file-item .info .meta { font-size: 0.68rem; color: var(--text2); }
+        .file-item .remove-btn { width: 22px; height: 22px; border-radius: 50%; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 0.75rem; transition: var(--transition); }
         .file-item .remove-btn:hover { background: rgba(231,76,60,0.15); color: var(--danger); }
 
         .preset-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-        .preset-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); color: var(--text); cursor: pointer; font-size: 0.78rem; font-weight: 500; transition: var(--transition); white-space: nowrap; }
+        .preset-btn { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); color: var(--text); cursor: pointer; font-size: 0.76rem; font-weight: 500; transition: var(--transition); white-space: nowrap; }
         .preset-btn:hover { border-color: var(--accent); background: rgba(108,92,231,0.08); }
         .preset-btn.active-preset { border-color: var(--accent3); background: rgba(0,206,201,0.15); color: var(--accent3); font-weight: 700; box-shadow: 0 0 12px rgba(0,206,201,0.25); }
         .control-group { display: flex; flex-direction: column; gap: 4px; }
-        .control-group label { font-weight: 500; font-size: 0.8rem; color: var(--text2); display: flex; justify-content: space-between; align-items: center; }
+        .control-group label { font-weight: 500; font-size: 0.78rem; color: var(--text2); display: flex; justify-content: space-between; align-items: center; }
         .control-group label .val { color: var(--accent2); font-weight: 600; }
         .slider-input { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--border); outline: none; cursor: pointer; }
         .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 12px rgba(108,92,231,0.4); }
-        select.slider-input { height: 38px; padding: 0 12px; border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); border: 1px solid var(--border); font-size: 0.85rem; cursor: pointer; -webkit-appearance: auto; appearance: auto; }
-        .btn { padding: 10px 18px; border-radius: 25px; border: none; cursor: pointer; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.3px; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; justify-content: center; white-space: nowrap; }
+        select.slider-input { height: 36px; padding: 0 10px; border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); border: 1px solid var(--border); font-size: 0.82rem; cursor: pointer; -webkit-appearance: auto; appearance: auto; }
+        .btn { padding: 10px 18px; border-radius: 25px; border: none; cursor: pointer; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.3px; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; justify-content: center; white-space: nowrap; }
         .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: #fff; box-shadow: 0 4px 16px rgba(108,92,231,0.4); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(108,92,231,0.5); }
         .btn-success { background: linear-gradient(135deg, #00b894, #00cec9); color: #fff; }
@@ -196,7 +230,7 @@
         .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         .progress-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 2px; transition: width 0.3s; width: 0%; }
-        .progress-text { font-size: 0.75rem; color: var(--text2); text-align: center; }
+        .progress-text { font-size: 0.72rem; color: var(--text2); text-align: center; }
         .toast { position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 12px 20px; border-radius: 25px; font-weight: 600; font-size: 0.85rem; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: var(--shadow-lg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .toast.success { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.4); }
         .toast.error { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); }
@@ -220,7 +254,11 @@
                     <span style="font-size:3rem; display:block;">🖼️</span>
                     上传图片并点击左侧按钮增强<br>在此查看前后对比
                 </div>
-                <div class="zoom-controls" id="zoomControls" style="display:none;"></div>
+            </div>
+            <div class="zoom-controls" id="zoomControls" style="display:none;">
+                <button class="zoom-btn" id="zoomOutBtn" title="缩小">−</button>
+                <button class="zoom-btn" id="zoomResetBtn" title="重置">1:1</button>
+                <button class="zoom-btn" id="zoomInBtn" title="放大">+</button>
             </div>
         </div>
 
@@ -244,10 +282,10 @@
                     <div class="file-list-box">
                         <div class="card-title" style="margin-bottom:6px;">
                             <span class="dot"></span>📋 列表 (<span id="fileCount">0</span>)
-                            <button class="btn btn-secondary" id="btnListClear" style="margin-left:auto; padding:4px 12px; font-size:0.75rem; border-radius:15px;" title="清空文件列表">🗑️ 清空</button>
+                            <button class="btn btn-secondary" id="btnListClear" style="margin-left:auto; padding:4px 12px; font-size:0.7rem; border-radius:15px;">🗑️ 清空</button>
                         </div>
                         <div class="file-list" id="fileList">
-                            <div style="text-align:center;color:var(--text2);padding:20px;font-size:0.85rem;">还没有图片 📷</div>
+                            <div style="text-align:center;color:var(--text2);padding:20px;font-size:0.82rem;">还没有图片 📷</div>
                         </div>
                     </div>
                 </div>
@@ -326,6 +364,10 @@
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const presetBtns = document.getElementById('presetBtns');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const zoomResetBtn = document.getElementById('zoomResetBtn');
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const stickyPreview = document.getElementById('stickyPreview');
 
             let files = [];
             let activeFileId = null;
@@ -335,7 +377,8 @@
             let afterLayerEl = null;
             let sliderLineEl = null;
             let currentScale = 1;
-            const MIN_SCALE = 0.5, MAX_SCALE = 4, SCALE_STEP = 0.2;
+            const MIN_SCALE = 0.5, MAX_SCALE = 4;
+            const ZOOM_LEVELS = [0.5, 1, 2, 3, 4];
 
             const presets = {
                 mild: { sharpen: 40, denoise: '1', upscale: '1', contrast: 8, brightness: 0 },
@@ -438,7 +481,8 @@
             }
 
             function showPlaceholder() {
-                previewContainer.innerHTML = `<div class="preview-placeholder"><span style="font-size:3rem;display:block;">🖼️</span>上传图片并点击左侧按钮增强<br>在此查看前后对比</div><div class="zoom-controls" id="zoomControls" style="display:none;"></div>`;
+                previewContainer.innerHTML = `<div class="preview-placeholder"><span style="font-size:3rem;display:block;">🖼️</span>上传图片并点击左侧按钮增强<br>在此查看前后对比</div>`;
+                zoomControls.style.display = 'none';
                 currentScale=1; compareViewEl=afterLayerEl=sliderLineEl=null;
             }
 
@@ -448,14 +492,10 @@
                 previewContainer.innerHTML = `
                     <div class="compare-view" id="compareView" style="transform:scale(1);">
                         <img src="${af.originalDataURL}" alt="原图">
-                        <div class="corner-label" style="top:10px; left:10px;">📷 原始图片（尚未增强）</div>
-                    </div>
-                    <div class="zoom-controls" id="zoomControls">
-                        <button class="zoom-btn" id="zoomOutBtn">−</button>
-                        <button class="zoom-btn" id="zoomResetBtn">1:1</button>
-                        <button class="zoom-btn" id="zoomInBtn">+</button>
+                        <div class="corner-label" style="bottom:10px; left:10px; top:auto;">📷 原始图片（尚未增强）</div>
                     </div>`;
-                bindZoomEvents(); compareViewEl = document.getElementById('compareView');
+                zoomControls.style.display = 'flex';
+                compareViewEl = document.getElementById('compareView');
             }
 
             function showComparePreview(originalDataURL, processedDataURL) {
@@ -467,45 +507,14 @@
                             <img src="${originalDataURL}" alt="原始">
                         </div>
                         <div class="compare-slider-line" id="compareSliderLine" style="left:50%;"></div>
-                        <div class="corner-label" style="top:10px; left:10px;">📷 原始</div>
-                        <div class="corner-label after" style="top:10px; right:10px;">✨ 增强后</div>
-                    </div>
-                    <div class="zoom-controls" id="zoomControls">
-                        <button class="zoom-btn" id="zoomOutBtn">−</button>
-                        <button class="zoom-btn" id="zoomResetBtn">1:1</button>
-                        <button class="zoom-btn" id="zoomInBtn">+</button>
+                        <div class="corner-label" style="bottom:10px; left:10px; top:auto;">📷 原始</div>
+                        <div class="corner-label after" style="bottom:10px; right:10px; top:auto;">✨ 增强后</div>
                     </div>`;
-                bindZoomEvents();
+                zoomControls.style.display = 'flex';
                 compareViewEl = document.getElementById('compareView');
                 afterLayerEl = document.getElementById('afterLayer');
                 sliderLineEl = document.getElementById('compareSliderLine');
                 setupCompareSlider();
-            }
-
-            function bindZoomEvents() {
-                const zoomOut = document.getElementById('zoomOutBtn');
-                const zoomReset = document.getElementById('zoomResetBtn');
-                const zoomIn = document.getElementById('zoomInBtn');
-                if(zoomOut) zoomOut.addEventListener('click', ()=>adjustScale(-SCALE_STEP));
-                if(zoomReset) zoomReset.addEventListener('click', ()=>setScale(1));
-                if(zoomIn) zoomIn.addEventListener('click', ()=>adjustScale(SCALE_STEP));
-                previewContainer.addEventListener('wheel', (e)=>{
-                    if(!compareViewEl) return;
-                    e.preventDefault();
-                    adjustScale(e.deltaY>0 ? -SCALE_STEP : SCALE_STEP);
-                }, {passive:false});
-            }
-
-            function adjustScale(delta) {
-                let newScale = currentScale + delta;
-                newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale*10)/10));
-                setScale(newScale);
-            }
-
-            function setScale(scale) {
-                if(!compareViewEl) return;
-                currentScale = scale;
-                compareViewEl.style.transform = `scale(${scale})`;
             }
 
             function setupCompareSlider() {
@@ -530,6 +539,74 @@
                     updateSlider(e.clientX);
                 });
             }
+
+            function setScale(scale) {
+                if(!compareViewEl) return;
+                currentScale = scale;
+                compareViewEl.style.transform = `scale(${scale})`;
+            }
+
+            function zoomToNextLevel() {
+                for (let i=0; i<ZOOM_LEVELS.length; i++) {
+                    if (currentScale < ZOOM_LEVELS[i] - 0.01) {
+                        setScale(ZOOM_LEVELS[i]);
+                        return;
+                    }
+                }
+            }
+            function zoomToPrevLevel() {
+                for (let i=ZOOM_LEVELS.length-1; i>=0; i--) {
+                    if (currentScale > ZOOM_LEVELS[i] + 0.01) {
+                        setScale(ZOOM_LEVELS[i]);
+                        return;
+                    }
+                }
+            }
+
+            let pinchStartDist = 0, pinchStartScale = 1;
+            function getTouchDistance(touches) {
+                const dx = touches[0].clientX - touches[1].clientX;
+                const dy = touches[0].clientY - touches[1].clientY;
+                return Math.sqrt(dx*dx + dy*dy);
+            }
+            function handleTouchStart(e) {
+                if (!compareViewEl || !previewContainer.contains(e.target)) return;
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    pinchStartDist = getTouchDistance(e.touches);
+                    pinchStartScale = currentScale;
+                }
+            }
+            function handleTouchMove(e) {
+                if (!compareViewEl || !previewContainer.contains(e.target)) return;
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dist = getTouchDistance(e.touches);
+                    if (pinchStartDist > 0) {
+                        let newScale = pinchStartScale * (dist / pinchStartDist);
+                        newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale*10)/10));
+                        setScale(newScale);
+                    }
+                }
+            }
+            function handleTouchEnd(e) {
+                if (e.touches.length < 2) pinchStartDist = 0;
+            }
+
+            stickyPreview.addEventListener('wheel', (e) => {
+                if (!compareViewEl || !previewContainer.contains(e.target)) return;
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.2 : 0.2;
+                let newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round((currentScale + delta)*10)/10));
+                setScale(newScale);
+            }, { passive: false });
+            stickyPreview.addEventListener('touchstart', handleTouchStart, { passive: false });
+            stickyPreview.addEventListener('touchmove', handleTouchMove, { passive: false });
+            stickyPreview.addEventListener('touchend', handleTouchEnd);
+
+            zoomOutBtn.addEventListener('click', zoomToPrevLevel);
+            zoomResetBtn.addEventListener('click', () => setScale(1));
+            zoomInBtn.addEventListener('click', zoomToNextLevel);
 
             function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
             function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
