@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🐻熊啊熊啊熊📷 · 图片画质增强</title>
+    <title>熊啊熊啊熊 · 图片画质增强</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
     </script>
     <style>
@@ -60,7 +60,7 @@
             gap: 12px;
         }
         .header {
-            display: flex; align-items: center; gap: 16px;
+            display: flex; align-items: center; justify-content: space-between;
             padding: 8px 4px 0;
             flex-shrink: 0;
         }
@@ -70,7 +70,7 @@
             backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
             cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center;
             transition: var(--transition); color: var(--text); box-shadow: var(--shadow);
-            flex-shrink: 0; order: -1;
+            flex-shrink: 0;
         }
         .theme-toggle:hover { background: var(--surface); border-color: var(--accent); transform: scale(1.05); }
         .logo {
@@ -90,9 +90,27 @@
             display: flex; flex-direction: column;
         }
         .preview-title {
-            font-size: 1rem; font-weight: 600; margin-bottom: 8px;
-            display: flex; align-items: center; gap: 8px; color: var(--text);
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px; gap: 8px;
+            font-size: 0.9rem; font-weight: 600; color: var(--text);
         }
+        .preview-title .title-text {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .zoom-controls {
+            display: flex; gap: 4px;
+        }
+        .zoom-btn {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            cursor: pointer; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center;
+            justify-content: center; color: var(--text); transition: var(--transition);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+        .zoom-btn:hover { background: var(--surface); border-color: var(--accent); }
+        .zoom-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
         .preview-container {
             position: relative;
             width: 100%; height: 45vh; max-height: 550px; min-height: 260px;
@@ -104,9 +122,10 @@
             opacity: 0.7; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
         .compare-view {
-            position: relative; width: 100%; height: 100%; display: flex; align-items: center;
-            justify-content: center; overflow: hidden;
-            transform-origin: center center; transition: transform 0.15s ease;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            transform-origin: 0 0;
+            transition: transform 0.15s ease;
         }
         .compare-view img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .compare-view .after-layer {
@@ -133,26 +152,12 @@
         }
 
         .corner-label {
-            position: absolute; z-index: 25; padding: 3px 10px; border-radius: 12px;
+            position: absolute; z-index: 30; padding: 3px 10px; border-radius: 12px;
             font-size: 0.7rem; font-weight: 600; white-space: nowrap;
             background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
             color: #ff6b6b; pointer-events: none;
         }
         .corner-label.after { color: #51cf66; }
-
-        .zoom-controls {
-            position: absolute; top: 12px; right: 12px;
-            display: flex; gap: 4px; z-index: 40;
-        }
-        .zoom-btn {
-            width: 32px; height: 32px; border-radius: 50%;
-            border: 1px solid var(--border);
-            background: var(--surface); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            cursor: pointer; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center;
-            justify-content: center; color: var(--text); transition: var(--transition);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .zoom-btn:hover { background: var(--surface2); border-color: var(--accent); }
 
         .control-area {
             flex: 1 1 auto; overflow-y: auto; min-height: 0;
@@ -177,8 +182,10 @@
         .card-title { font-size: 0.95rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
         .card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); box-shadow: 0 0 10px var(--accent3); }
 
-        .action-buttons-row { display: flex; flex-wrap: wrap; gap: 8px; }
-        /* 修改占比：上传30% 文件列表70% */
+        .action-buttons-row {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            justify-content: center; /* 按钮居中 */
+        }
         .upload-file-row { display: flex; gap: 12px; align-items: stretch; }
         .upload-box { flex: 3; display: flex; align-items: stretch; }
         .file-list-box { flex: 7; display: flex; flex-direction: column; }
@@ -243,22 +250,20 @@
 <body>
     <div class="app-container">
         <div class="header">
+            <div class="logo">🐻熊啊熊啊熊</div>
             <button class="theme-toggle" id="themeToggle" title="切换夜间模式">🌙</button>
-            <div class="logo">🐻熊啊熊啊熊📷</div>
         </div>
 
         <div class="sticky-preview" id="stickyPreview">
-            <div class="preview-title"><span class="dot"></span>🔍 预览对比 — 拖动中间线查看效果</div>
-            <div class="preview-container" id="previewContainer">
-                <div class="preview-placeholder" id="previewPlaceholder">
-                    <span style="font-size:3rem; display:block;">🖼️</span>
-                    上传图片并点击左侧按钮增强<br>在此查看前后对比
+            <div class="preview-title">
+                <div class="title-text"><span class="dot"></span>🔍 预览对比 — 拖动中间线查看效果</div>
+                <div class="zoom-controls" id="zoomControls">
+                    <button class="zoom-btn" id="zoomOutBtn" title="缩小">−</button>
+                    <button class="zoom-btn" id="zoomResetBtn" title="重置">1:1</button>
+                    <button class="zoom-btn" id="zoomInBtn" title="放大">+</button>
                 </div>
             </div>
-            <div class="zoom-controls" id="zoomControls" style="display:none;">
-                <button class="zoom-btn" id="zoomOutBtn" title="缩小">−</button>
-                <button class="zoom-btn" id="zoomResetBtn" title="重置">1:1</button>
-                <button class="zoom-btn" id="zoomInBtn" title="放大">+</button>
+            <div class="preview-container" id="previewContainer">
             </div>
         </div>
 
@@ -340,7 +345,9 @@
         (function() {
             const themeToggle = document.getElementById('themeToggle');
             const previewContainer = document.getElementById('previewContainer');
-            const zoomControls = document.getElementById('zoomControls');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const zoomResetBtn = document.getElementById('zoomResetBtn');
+            const zoomInBtn = document.getElementById('zoomInBtn');
             const fileInput = document.getElementById('fileInput');
             const uploadZone = document.getElementById('uploadZone');
             const fileListEl = document.getElementById('fileList');
@@ -364,9 +371,6 @@
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const presetBtns = document.getElementById('presetBtns');
-            const zoomOutBtn = document.getElementById('zoomOutBtn');
-            const zoomResetBtn = document.getElementById('zoomResetBtn');
-            const zoomInBtn = document.getElementById('zoomInBtn');
             const stickyPreview = document.getElementById('stickyPreview');
 
             let files = [];
@@ -377,8 +381,16 @@
             let afterLayerEl = null;
             let sliderLineEl = null;
             let currentScale = 1;
+            let dragOffsetX = 0, dragOffsetY = 0;
             const MIN_SCALE = 0.5, MAX_SCALE = 4;
             const ZOOM_LEVELS = [0.5, 1, 2, 3, 4];
+
+            function updateZoomButtons() {
+                const hasView = compareViewEl !== null;
+                zoomOutBtn.disabled = !hasView;
+                zoomResetBtn.disabled = !hasView;
+                zoomInBtn.disabled = !hasView;
+            }
 
             const presets = {
                 mild: { sharpen: 40, denoise: '1', upscale: '1', contrast: 8, brightness: 0 },
@@ -482,39 +494,40 @@
 
             function showPlaceholder() {
                 previewContainer.innerHTML = `<div class="preview-placeholder"><span style="font-size:3rem;display:block;">🖼️</span>上传图片并点击左侧按钮增强<br>在此查看前后对比</div>`;
-                zoomControls.style.display = 'none';
-                currentScale=1; compareViewEl=afterLayerEl=sliderLineEl=null;
+                compareViewEl = afterLayerEl = sliderLineEl = null;
+                dragOffsetX = dragOffsetY = 0;
+                updateZoomButtons();
             }
 
             function showOriginalPreview() {
                 const af = files.find(f=>f.id===activeFileId); if(!af) { showPlaceholder(); return; }
-                currentScale=1;
+                currentScale = 1; dragOffsetX = dragOffsetY = 0;
                 previewContainer.innerHTML = `
-                    <div class="compare-view" id="compareView" style="transform:scale(1);">
+                    <div class="compare-view" id="compareView" style="transform: translate(0px, 0px) scale(1);">
                         <img src="${af.originalDataURL}" alt="原图">
-                        <div class="corner-label" style="bottom:10px; left:10px; top:auto;">📷 原始图片（尚未增强）</div>
-                    </div>`;
-                zoomControls.style.display = 'flex';
+                    </div>
+                    <div class="corner-label" style="bottom:10px; left:10px;">📷 原始图片（尚未增强）</div>`;
                 compareViewEl = document.getElementById('compareView');
+                updateZoomButtons();
             }
 
             function showComparePreview(originalDataURL, processedDataURL) {
-                currentScale=1;
+                currentScale = 1; dragOffsetX = dragOffsetY = 0;
                 previewContainer.innerHTML = `
-                    <div class="compare-view" id="compareView" style="transform:scale(1);">
+                    <div class="compare-view" id="compareView" style="transform: translate(0px, 0px) scale(1);">
                         <img src="${processedDataURL}" alt="增强后">
                         <div class="after-layer" id="afterLayer" style="clip-path:inset(0 50% 0 0);">
                             <img src="${originalDataURL}" alt="原始">
                         </div>
                         <div class="compare-slider-line" id="compareSliderLine" style="left:50%;"></div>
-                        <div class="corner-label" style="bottom:10px; left:10px; top:auto;">📷 原始</div>
-                        <div class="corner-label after" style="bottom:10px; right:10px; top:auto;">✨ 增强后</div>
-                    </div>`;
-                zoomControls.style.display = 'flex';
+                    </div>
+                    <div class="corner-label" style="bottom:10px; left:10px;">📷 原始</div>
+                    <div class="corner-label after" style="bottom:10px; right:10px;">✨ 增强后</div>`;
                 compareViewEl = document.getElementById('compareView');
                 afterLayerEl = document.getElementById('afterLayer');
                 sliderLineEl = document.getElementById('compareSliderLine');
                 setupCompareSlider();
+                updateZoomButtons();
             }
 
             function setupCompareSlider() {
@@ -534,36 +547,56 @@
                 sliderLineEl.addEventListener('touchstart', (e)=>{ e.preventDefault(); dragging=true; document.body.style.userSelect='none'; });
                 document.addEventListener('touchmove', (e)=>{ if(!dragging) return; updateSlider(e.touches[0].clientX); }, {passive:false});
                 document.addEventListener('touchend', ()=>{ dragging=false; document.body.style.userSelect=''; });
-                compareViewEl.addEventListener('click', (e)=>{
-                    if(e.target===sliderLineEl || sliderLineEl?.contains(e.target)) return;
-                    updateSlider(e.clientX);
-                });
+            }
+
+            function updateTransform() {
+                if (!compareViewEl) return;
+                compareViewEl.style.transform = `translate(${dragOffsetX}px, ${dragOffsetY}px) scale(${currentScale})`;
             }
 
             function setScale(scale) {
-                if(!compareViewEl) return;
                 currentScale = scale;
-                compareViewEl.style.transform = `scale(${scale})`;
+                updateTransform();
             }
 
             function zoomToNextLevel() {
                 for (let i=0; i<ZOOM_LEVELS.length; i++) {
-                    if (currentScale < ZOOM_LEVELS[i] - 0.01) {
-                        setScale(ZOOM_LEVELS[i]);
-                        return;
-                    }
+                    if (currentScale < ZOOM_LEVELS[i] - 0.01) { setScale(ZOOM_LEVELS[i]); return; }
                 }
             }
             function zoomToPrevLevel() {
                 for (let i=ZOOM_LEVELS.length-1; i>=0; i--) {
-                    if (currentScale > ZOOM_LEVELS[i] + 0.01) {
-                        setScale(ZOOM_LEVELS[i]);
-                        return;
-                    }
+                    if (currentScale > ZOOM_LEVELS[i] + 0.01) { setScale(ZOOM_LEVELS[i]); return; }
                 }
             }
 
-            let pinchStartDist = 0, pinchStartScale = 1;
+            let isDraggingImage = false, dragStartX = 0, dragStartY = 0, startOffsetX = 0, startOffsetY = 0;
+            function onDragStart(e) {
+                if (!compareViewEl) return;
+                if (e.target.closest('#compareSliderLine')) return;
+                e.preventDefault();
+                isDraggingImage = true;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                dragStartX = clientX; dragStartY = clientY;
+                startOffsetX = dragOffsetX; startOffsetY = dragOffsetY;
+                document.body.style.userSelect = 'none';
+            }
+            function onDragMove(e) {
+                if (!isDraggingImage || !compareViewEl) return;
+                e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                dragOffsetX = startOffsetX + (clientX - dragStartX);
+                dragOffsetY = startOffsetY + (clientY - dragStartY);
+                updateTransform();
+            }
+            function onDragEnd() {
+                isDraggingImage = false;
+                document.body.style.userSelect = '';
+            }
+
+            let pinchStartDist = 0, pinchStartScale = 1, pinchStartOffsetX = 0, pinchStartOffsetY = 0;
             function getTouchDistance(touches) {
                 const dx = touches[0].clientX - touches[1].clientX;
                 const dy = touches[0].clientY - touches[1].clientY;
@@ -575,6 +608,10 @@
                     e.preventDefault();
                     pinchStartDist = getTouchDistance(e.touches);
                     pinchStartScale = currentScale;
+                    pinchStartOffsetX = dragOffsetX;
+                    pinchStartOffsetY = dragOffsetY;
+                } else if (e.touches.length === 1) {
+                    onDragStart(e);
                 }
             }
             function handleTouchMove(e) {
@@ -585,12 +622,16 @@
                     if (pinchStartDist > 0) {
                         let newScale = pinchStartScale * (dist / pinchStartDist);
                         newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale*10)/10));
-                        setScale(newScale);
+                        currentScale = newScale;
+                        updateTransform();
                     }
+                } else if (e.touches.length === 1 && isDraggingImage) {
+                    onDragMove(e);
                 }
             }
             function handleTouchEnd(e) {
                 if (e.touches.length < 2) pinchStartDist = 0;
+                if (e.touches.length === 0) onDragEnd();
             }
 
             stickyPreview.addEventListener('wheel', (e) => {
@@ -600,14 +641,26 @@
                 let newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round((currentScale + delta)*10)/10));
                 setScale(newScale);
             }, { passive: false });
-            stickyPreview.addEventListener('touchstart', handleTouchStart, { passive: false });
-            stickyPreview.addEventListener('touchmove', handleTouchMove, { passive: false });
-            stickyPreview.addEventListener('touchend', handleTouchEnd);
+
+            previewContainer.addEventListener('mousedown', (e) => {
+                if (!compareViewEl) return;
+                if (e.target.closest('#compareSliderLine')) return;
+                onDragStart(e);
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (isDraggingImage) onDragMove(e);
+            });
+            document.addEventListener('mouseup', onDragEnd);
+
+            previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+            previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+            previewContainer.addEventListener('touchend', handleTouchEnd);
 
             zoomOutBtn.addEventListener('click', zoomToPrevLevel);
-            zoomResetBtn.addEventListener('click', () => setScale(1));
+            zoomResetBtn.addEventListener('click', () => { dragOffsetX = dragOffsetY = 0; setScale(1); });
             zoomInBtn.addEventListener('click', zoomToNextLevel);
 
+            // 图像处理核心
             function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
             function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
             function canvasToBlob(canvas) { return new Promise(r=>canvas.toBlob(r,'image/png',0.95)); }
