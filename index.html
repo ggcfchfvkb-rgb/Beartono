@@ -20,7 +20,6 @@
             --text2: #5a5a7a;
             --danger: #e74c3c;
             --success: #2ecc71;
-            --warning: #f39c12;
             --border: rgba(0, 0, 0, 0.12);
             --radius: 20px;
             --radius-sm: 14px;
@@ -30,7 +29,6 @@
             --blur: blur(24px);
             --preview-bg: #ffffff;
         }
-
         body.dark-mode {
             --bg: #0f0f1a;
             --bg-gradient: radial-gradient(ellipse at 30% 20%, rgba(108, 92, 231, 0.15) 0%, transparent 60%),
@@ -44,651 +42,215 @@
             --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
             --preview-bg: #0a0a14;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
-            background: var(--bg);
-            background-image: var(--bg-gradient);
-            min-height: 100vh;
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 16px 16px 40px;
-            transition: background 0.3s, color 0.3s;
+            background: var(--bg); background-image: var(--bg-gradient);
+            min-height: 100vh; color: var(--text);
+            display: flex; justify-content: center; align-items: flex-start;
+            padding: 16px 16px 40px; transition: background 0.3s, color 0.3s;
             -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none;
         }
-
-        .app-container {
-            width: 100%;
-            max-width: 1300px;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        /* 头部 - 左上角按钮 + 标题 */
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 8px 4px;
-        }
+        .app-container { width: 100%; max-width: 1300px; display: flex; flex-direction: column; gap: 18px; }
+        .header { display: flex; align-items: center; gap: 16px; padding: 8px 4px; }
         .theme-toggle {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 1.5px solid var(--border);
-            background: var(--surface2);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
-            cursor: pointer;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            color: var(--text);
-            box-shadow: var(--shadow);
-            flex-shrink: 0;
-            order: -1;
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 1.5px solid var(--border); background: var(--surface2);
+            backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition); color: var(--text); box-shadow: var(--shadow);
+            flex-shrink: 0; order: -1;
         }
-        .theme-toggle:hover {
-            background: var(--surface);
-            border-color: var(--accent);
-            transform: scale(1.05);
-        }
+        .theme-toggle:hover { background: var(--surface); border-color: var(--accent); transform: scale(1.05); }
         .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px;
             background: linear-gradient(135deg, var(--accent2), var(--accent3));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            white-space: nowrap;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; white-space: nowrap;
         }
 
-        /* 固定预览区 */
         .sticky-preview {
-            position: sticky;
-            top: 16px;
-            z-index: 100;
-            width: 100%;
-            background: var(--surface);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px;
-            box-shadow: var(--shadow-lg);
-            margin-bottom: 4px;
-            transition: background 0.3s;
+            position: sticky; top: 16px; z-index: 100; width: 100%;
+            background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px; box-shadow: var(--shadow-lg); margin-bottom: 4px; transition: background 0.3s;
         }
-        .sticky-preview .preview-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text);
-        }
+        .preview-title { font-size: 1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: var(--text); }
         .preview-container {
-            position: relative;
-            width: 100%;
-            height: 50vh;
-            max-height: 600px;
-            min-height: 280px;
-            background: var(--preview-bg);
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; width: 100%; height: 50vh; max-height: 600px; min-height: 280px;
+            background: var(--preview-bg); border-radius: var(--radius-sm); overflow: hidden;
             border: 1px solid var(--border);
-            margin-bottom: 16px;
         }
         .preview-placeholder {
-            color: var(--text2);
-            text-align: center;
-            font-size: 0.95rem;
-            line-height: 1.8;
-            opacity: 0.7;
+            color: var(--text2); text-align: center; font-size: 0.95rem; line-height: 1.8;
+            opacity: 0.7; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
         .compare-view {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            position: relative; width: 100%; height: 100%; display: flex; align-items: center;
+            justify-content: center; overflow: hidden; transform-origin: center center;
+            transition: transform 0.2s ease;
         }
-        .compare-view img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-        }
+        .compare-view img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .compare-view .after-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            clip-path: inset(0 50% 0 0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;
+            clip-path: inset(0 50% 0 0); display: flex; align-items: center; justify-content: center;
         }
         .compare-view .after-layer img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            max-width: 100%; max-height: 100%; object-fit: contain;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
         .compare-slider-line {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 5px;
-            background: #ffffff;
-            cursor: col-resize;
-            z-index: 20;
-            box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
-            transition: left 0.05s linear;
-            touch-action: none;
+            position: absolute; top: 0; bottom: 0; width: 5px; background: #ffffff;
+            cursor: col-resize; z-index: 20; box-shadow: 0 0 14px rgba(0,0,0,0.6); touch-action: none;
         }
         .compare-slider-line::before {
-            content: '';
-            position: absolute;
-            left: -18px;
-            right: -18px;
-            top: 0;
-            bottom: 0;
-            background: transparent;
-            cursor: col-resize;
-            z-index: -1;
+            content: ''; position: absolute; left: -18px; right: -18px; top: 0; bottom: 0;
+            background: transparent; cursor: col-resize; z-index: -1;
         }
         .compare-slider-line::after {
-            content: '⟷';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #ffffff;
-            color: #333;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: bold;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-        }
-        .compare-labels {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 24px;
-            z-index: 11;
-            pointer-events: none;
-        }
-        .compare-label {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        .compare-label.before {
-            background: rgba(0, 0, 0, 0.7);
-            color: #ff6b6b;
-        }
-        .compare-label.after {
-            background: rgba(0, 0, 0, 0.7);
-            color: #51cf66;
+            content: '⟷'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #ffffff; color: #333; width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+            font-weight: bold; box-shadow: 0 4px 16px rgba(0,0,0,0.5); pointer-events: none;
         }
 
-        /* 操作按钮区域（预览下方） */
-        .action-buttons-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
-            padding-top: 4px;
+        /* 角落小标签透明样式 */
+        .corner-label {
+            position: absolute; z-index: 25; padding: 3px 10px; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 600; white-space: nowrap;
+            background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            color: #ff6b6b; pointer-events: none;
         }
+        .corner-label.after { color: #51cf66; }
 
-        /* 下方控制区 */
-        .control-area {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 18px;
-            align-items: start;
+        .zoom-controls { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; z-index: 30; }
+        .zoom-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+            background: var(--surface); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            cursor: pointer; font-size: 1rem; font-weight: bold; display: flex; align-items: center;
+            justify-content: center; color: var(--text); transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        @media (max-width: 900px) {
-            .control-area {
-                grid-template-columns: 1fr;
-            }
-            .sticky-preview {
-                top: 8px;
-            }
-            .preview-container {
-                height: 40vh;
-            }
-            .logo {
-                font-size: 1.4rem;
-            }
-        }
+        .zoom-btn:hover { background: var(--surface2); border-color: var(--accent); }
 
+        .control-area { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: start; }
+        @media (max-width: 960px) { .control-area { grid-template-columns: 1fr; } .sticky-preview { top: 8px; } .preview-container { height: 40vh; } .logo { font-size: 1.4rem; } }
         .card {
-            background: var(--surface);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            transition: background 0.3s, border 0.3s;
+            background: var(--surface); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
+            box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px; transition: background 0.3s;
         }
-        .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .card-title .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent3);
-            box-shadow: 0 0 10px var(--accent3);
-        }
+        .card-title { font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); box-shadow: 0 0 10px var(--accent3); }
 
-        /* 缩小上传区域 */
+        .action-buttons-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .upload-file-row { display: flex; gap: 12px; align-items: stretch; }
+        .upload-box { flex: 1; display: flex; align-items: stretch; }
+        .file-list-box { flex: 1; display: flex; flex-direction: column; }
         .upload-zone {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-sm);
-            padding: 14px 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            background: var(--surface2);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
+            border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 14px 12px;
+            text-align: center; cursor: pointer; transition: var(--transition);
+            background: var(--surface2); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;
         }
-        .upload-zone:hover,
-        .upload-zone.drag-over {
-            border-color: var(--accent);
-            background: rgba(108, 92, 231, 0.06);
-            box-shadow: 0 0 20px rgba(108, 92, 231, 0.1);
-            transform: translateY(-2px);
-        }
-        .upload-zone .upload-icon {
-            font-size: 1.8rem;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .upload-zone .upload-text {
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-        .upload-zone .upload-hint {
-            color: var(--text2);
-            font-size: 0.72rem;
-            margin-top: 4px;
-        }
-        .upload-zone input[type="file"] {
-            display: none;
-        }
-
+        .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(108,92,231,0.06); box-shadow: 0 0 20px rgba(108,92,231,0.1); transform: translateY(-2px); }
+        .upload-zone .upload-icon { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+        .upload-zone .upload-text { font-weight: 600; font-size: 0.85rem; }
+        .upload-zone .upload-hint { color: var(--text2); font-size: 0.72rem; margin-top: 4px; }
+        .upload-zone input[type="file"] { display: none; }
         .file-list {
-            max-height: 180px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding-right: 4px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            flex: 1; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+            padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+            border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px;
+            background: var(--surface2); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
         }
-        .file-list::-webkit-scrollbar {
-            width: 5px;
-        }
-        .file-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .file-list::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 10px;
-        }
-        .file-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: var(--surface2);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: var(--transition);
-            border: 1.5px solid transparent;
-            font-size: 0.82rem;
-        }
-        .file-item:hover {
-            border-color: var(--accent);
-        }
-        .file-item.active {
-            border-color: var(--accent3);
-            background: rgba(0, 206, 201, 0.08);
-            box-shadow: 0 0 16px rgba(0, 206, 201, 0.1);
-        }
-        .file-item .thumb {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            object-fit: cover;
-            flex-shrink: 0;
-            background: var(--preview-bg);
-            border: 1px solid var(--border);
-        }
-        .file-item .info {
-            flex: 1;
-            min-width: 0;
-        }
-        .file-item .info .name {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .file-item .info .meta {
-            font-size: 0.7rem;
-            color: var(--text2);
-        }
-        .file-item .remove-btn {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: var(--text2);
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-        .file-item .remove-btn:hover {
-            background: rgba(231, 76, 60, 0.15);
-            color: var(--danger);
-        }
+        .file-list::-webkit-scrollbar { width: 5px; } .file-list::-webkit-scrollbar-track { background: transparent; } .file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .file-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface); border-radius: 10px; cursor: pointer; transition: var(--transition); border: 1.5px solid transparent; font-size: 0.8rem; }
+        .file-item:hover { border-color: var(--accent); }
+        .file-item.active { border-color: var(--accent3); background: rgba(0,206,201,0.08); box-shadow: 0 0 16px rgba(0,206,201,0.1); }
+        .file-item .thumb { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--preview-bg); border: 1px solid var(--border); }
+        .file-item .info { flex: 1; min-width: 0; }
+        .file-item .info .name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-item .info .meta { font-size: 0.7rem; color: var(--text2); }
+        .file-item .remove-btn { width: 24px; height: 24px; border-radius: 50%; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 0.8rem; transition: var(--transition); }
+        .file-item .remove-btn:hover { background: rgba(231,76,60,0.15); color: var(--danger); }
 
-        .preset-btns {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .preset-btn {
-            padding: 7px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--surface2);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
-            color: var(--text);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 500;
-            transition: var(--transition);
-            white-space: nowrap;
-        }
-        .preset-btn:hover {
-            border-color: var(--accent);
-            background: rgba(108, 92, 231, 0.08);
-        }
-        .preset-btn.active-preset {
-            border-color: var(--accent3);
-            background: rgba(0, 206, 201, 0.15);
-            color: var(--accent3);
-            font-weight: 700;
-            box-shadow: 0 0 12px rgba(0, 206, 201, 0.25);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .control-group label {
-            font-weight: 500;
-            font-size: 0.8rem;
-            color: var(--text2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .control-group label .val {
-            color: var(--accent2);
-            font-weight: 600;
-        }
-        .slider-input {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: var(--border);
-            outline: none;
-            cursor: pointer;
-        }
-        .slider-input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            border: 3px solid #fff;
-            box-shadow: 0 0 12px rgba(108, 92, 231, 0.4);
-        }
-        select.slider-input {
-            height: 38px;
-            padding: 0 12px;
-            border-radius: var(--radius-sm);
-            background: var(--surface2);
-            color: var(--text);
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
-            cursor: pointer;
-            -webkit-appearance: auto;
-            appearance: auto;
-        }
-
-        .btn {
-            padding: 11px 20px;
-            border-radius: 25px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            letter-spacing: 0.3px;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            justify-content: center;
-            white-space: nowrap;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #8b5cf6);
-            color: #fff;
-            box-shadow: 0 4px 16px rgba(108, 92, 231, 0.4);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 22px rgba(108, 92, 231, 0.5);
-        }
-        .btn-success {
-            background: linear-gradient(135deg, #00b894, #00cec9);
-            color: #fff;
-        }
-        .btn-success:hover {
-            transform: translateY(-2px);
-        }
-        .btn-secondary {
-            background: var(--surface2);
-            color: var(--text);
-            border: 1px solid var(--border);
-            backdrop-filter: var(--blur);
-            -webkit-backdrop-filter: var(--blur);
-        }
-        .btn-secondary:hover {
-            border-color: var(--accent2);
-        }
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .progress-bar-wrap {
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--accent3));
-            border-radius: 2px;
-            transition: width 0.3s;
-            width: 0%;
-        }
-        .progress-text {
-            font-size: 0.75rem;
-            color: var(--text2);
-            text-align: center;
-        }
-
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: var(--shadow-lg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        .toast.success {
-            background: rgba(46, 204, 113, 0.15);
-            color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.4);
-        }
-        .toast.error {
-            background: rgba(231, 76, 60, 0.15);
-            color: #e74c3c;
-            border: 1px solid rgba(231, 76, 60, 0.4);
-        }
-        .toast.info {
-            background: rgba(108, 92, 231, 0.15);
-            color: #6c5ce7;
-            border: 1px solid rgba(108, 92, 231, 0.4);
-        }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(60px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        .processing-indicator {
-            animation: pulse 1.2s infinite;
-            color: var(--accent3);
-        }
-        @keyframes pulse {
-            0%,
-            100% {
-                opacity: 0.6;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
+        .preset-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+        .preset-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); color: var(--text); cursor: pointer; font-size: 0.78rem; font-weight: 500; transition: var(--transition); white-space: nowrap; }
+        .preset-btn:hover { border-color: var(--accent); background: rgba(108,92,231,0.08); }
+        .preset-btn.active-preset { border-color: var(--accent3); background: rgba(0,206,201,0.15); color: var(--accent3); font-weight: 700; box-shadow: 0 0 12px rgba(0,206,201,0.25); }
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
+        .control-group label { font-weight: 500; font-size: 0.8rem; color: var(--text2); display: flex; justify-content: space-between; align-items: center; }
+        .control-group label .val { color: var(--accent2); font-weight: 600; }
+        .slider-input { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--border); outline: none; cursor: pointer; }
+        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 12px rgba(108,92,231,0.4); }
+        select.slider-input { height: 38px; padding: 0 12px; border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); border: 1px solid var(--border); font-size: 0.85rem; cursor: pointer; -webkit-appearance: auto; appearance: auto; }
+        .btn { padding: 10px 18px; border-radius: 25px; border: none; cursor: pointer; font-weight: 600; font-size: 0.82rem; letter-spacing: 0.3px; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px; justify-content: center; white-space: nowrap; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: #fff; box-shadow: 0 4px 16px rgba(108,92,231,0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(108,92,231,0.5); }
+        .btn-success { background: linear-gradient(135deg, #00b894, #00cec9); color: #fff; }
+        .btn-success:hover { transform: translateY(-2px); }
+        .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+        .btn-secondary:hover { border-color: var(--accent2); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        .progress-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 2px; transition: width 0.3s; width: 0%; }
+        .progress-text { font-size: 0.75rem; color: var(--text2); text-align: center; }
+        .toast { position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 12px 20px; border-radius: 25px; font-weight: 600; font-size: 0.85rem; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: var(--shadow-lg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .toast.success { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.4); }
+        .toast.error { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); }
+        .toast.info { background: rgba(108,92,231,0.15); color: #6c5ce7; border: 1px solid rgba(108,92,231,0.4); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+        .processing-indicator { animation: pulse 1.2s infinite; color: var(--accent3); }
+        @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- 头部：左上角主题按钮 + 标题，无副标题 -->
         <div class="header">
             <button class="theme-toggle" id="themeToggle" title="切换夜间模式">🌙</button>
             <div class="logo">🐻熊啊熊啊熊📷</div>
         </div>
 
-        <!-- 固定预览对比区（最上方） -->
         <div class="sticky-preview" id="stickyPreview">
             <div class="preview-title"><span class="dot"></span>🔍 预览对比 — 拖动中间线查看效果</div>
             <div class="preview-container" id="previewContainer">
-                <div class="preview-placeholder">
+                <div class="preview-placeholder" id="previewPlaceholder">
                     <span style="font-size:3rem; display:block;">🖼️</span>
-                    上传图片并点击下方按钮增强<br>在此查看前后对比
+                    上传图片并点击左侧按钮增强<br>在此查看前后对比
                 </div>
-            </div>
-
-            <!-- 所有操作按钮移至预览下方 -->
-            <div class="action-buttons-row">
-                <button class="btn btn-primary" id="btnProcessOne" disabled>✨ 增强当前图片</button>
-                <button class="btn btn-success" id="btnProcessAll" disabled>🚀 批量处理全部</button>
-                <button class="btn btn-secondary" id="btnDownloadOne" disabled>💾 下载当前结果</button>
-                <button class="btn btn-secondary" id="btnDownloadAll" disabled>📦 打包下载全部</button>
-                <button class="btn btn-secondary" id="btnClearAll">🗑️ 清空列表</button>
+                <div class="zoom-controls" id="zoomControls" style="display:none;"></div>
             </div>
         </div>
 
-        <!-- 下方参数控制区（仅剩上传与参数调节） -->
         <div class="control-area">
             <div class="card" id="leftPanel">
-                <div class="card-title"><span class="dot"></span>📁 上传图片</div>
-                <div class="upload-zone" id="uploadZone">
-                    <span class="upload-icon">📷</span>
-                    <div class="upload-text">拖拽或点击上传</div>
-                    <div class="upload-hint">支持 JPG/PNG/WebP/BMP</div>
-                    <input type="file" id="fileInput" accept="image/*" multiple>
+                <div class="action-buttons-row">
+                    <button class="btn btn-primary" id="btnProcessOne" disabled>✨ 增强当前图片</button>
+                    <button class="btn btn-success" id="btnProcessAll" disabled>🚀 批量处理全部</button>
+                    <button class="btn btn-secondary" id="btnDownloadOne" disabled>💾 下载当前结果</button>
+                    <button class="btn btn-secondary" id="btnDownloadAll" disabled>📦 打包下载全部</button>
                 </div>
-
-                <div class="card-title"><span class="dot"></span>📋 文件列表 (<span id="fileCount">0</span>)</div>
-                <div class="file-list" id="fileList">
-                    <div style="text-align:center;color:var(--text2);padding:20px;font-size:0.85rem;">还没有上传图片 📷</div>
+                <div class="upload-file-row">
+                    <div class="upload-box">
+                        <div class="upload-zone" id="uploadZone">
+                            <span class="upload-icon">📷</span>
+                            <div class="upload-text">拖拽或点击上传</div>
+                            <div class="upload-hint">JPG/PNG/WebP/BMP</div>
+                            <input type="file" id="fileInput" accept="image/*" multiple>
+                        </div>
+                    </div>
+                    <div class="file-list-box">
+                        <div class="card-title" style="margin-bottom:6px;">
+                            <span class="dot"></span>📋 列表 (<span id="fileCount">0</span>)
+                            <button class="btn btn-secondary" id="btnListClear" style="margin-left:auto; padding:4px 12px; font-size:0.75rem; border-radius:15px;" title="清空文件列表">🗑️ 清空</button>
+                        </div>
+                        <div class="file-list" id="fileList">
+                            <div style="text-align:center;color:var(--text2);padding:20px;font-size:0.85rem;">还没有图片 📷</div>
+                        </div>
+                    </div>
                 </div>
-
                 <div class="card-title"><span class="dot"></span>⚙️ 增强参数</div>
                 <div class="preset-btns" id="presetBtns">
                     <button class="preset-btn active-preset" data-preset="mild">🌿 轻度增强（推荐）</button>
@@ -696,7 +258,6 @@
                     <button class="preset-btn" data-preset="strong">🔥 强力增强</button>
                     <button class="preset-btn" data-preset="ai">🤖 AI风格</button>
                 </div>
-
                 <div class="control-group">
                     <label>🔪 锐化强度 <span class="val" id="sharpenVal">40%</span></label>
                     <input type="range" class="slider-input" id="sharpenSlider" min="0" max="200" value="40" step="1">
@@ -710,7 +271,7 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>📐 放大倍数 <span class="val" id="upscaleVal">1× (保持原尺寸)</span></label>
+                    <label>📐 放大倍数 <span class="val" id="upscaleVal">1×</span></label>
                     <select class="slider-input" id="upscaleSelect">
                         <option value="1" selected>1× 保持原尺寸</option>
                         <option value="1.5">1.5× 适度放大</option>
@@ -727,7 +288,6 @@
                     <label>☀️ 亮度微调 <span class="val" id="brightnessVal">0</span></label>
                     <input type="range" class="slider-input" id="brightnessSlider" min="-30" max="30" value="0" step="1">
                 </div>
-
                 <div class="progress-bar-wrap" id="progressWrap" style="display:none;">
                     <div class="progress-bar-fill" id="progressFill"></div>
                 </div>
@@ -736,19 +296,22 @@
             <div></div>
         </div>
     </div>
-
     <div id="toastContainer"></div>
 
     <script>
         (function() {
-            const uploadZone = document.getElementById('uploadZone');
+            const themeToggle = document.getElementById('themeToggle');
+            const previewContainer = document.getElementById('previewContainer');
+            const zoomControls = document.getElementById('zoomControls');
             const fileInput = document.getElementById('fileInput');
+            const uploadZone = document.getElementById('uploadZone');
             const fileListEl = document.getElementById('fileList');
             const fileCountEl = document.getElementById('fileCount');
-            const previewContainer = document.getElementById('previewContainer');
-            const progressWrap = document.getElementById('progressWrap');
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
+            const btnProcessOne = document.getElementById('btnProcessOne');
+            const btnProcessAll = document.getElementById('btnProcessAll');
+            const btnDownloadOne = document.getElementById('btnDownloadOne');
+            const btnDownloadAll = document.getElementById('btnDownloadAll');
+            const btnListClear = document.getElementById('btnListClear');
             const sharpenSlider = document.getElementById('sharpenSlider');
             const denoiseSelect = document.getElementById('denoiseSelect');
             const upscaleSelect = document.getElementById('upscaleSelect');
@@ -759,20 +322,20 @@
             const upscaleValEl = document.getElementById('upscaleVal');
             const contrastValEl = document.getElementById('contrastVal');
             const brightnessValEl = document.getElementById('brightnessVal');
-            const btnProcessOne = document.getElementById('btnProcessOne');
-            const btnProcessAll = document.getElementById('btnProcessAll');
-            const btnDownloadOne = document.getElementById('btnDownloadOne');
-            const btnDownloadAll = document.getElementById('btnDownloadAll');
-            const btnClearAll = document.getElementById('btnClearAll');
+            const progressWrap = document.getElementById('progressWrap');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
             const presetBtns = document.getElementById('presetBtns');
-            const themeToggle = document.getElementById('themeToggle');
 
             let files = [];
             let activeFileId = null;
             let isProcessing = false;
             let currentProcessedDataURL = null;
-            let compareSliderX = 50;
-            let isDraggingSlider = false;
+            let compareViewEl = null;
+            let afterLayerEl = null;
+            let sliderLineEl = null;
+            let currentScale = 1;
+            const MIN_SCALE = 0.5, MAX_SCALE = 4, SCALE_STEP = 0.2;
 
             const presets = {
                 mild: { sharpen: 40, denoise: '1', upscale: '1', contrast: 8, brightness: 0 },
@@ -782,683 +345,253 @@
             };
 
             function applyPreset(name) {
-                const p = presets[name];
-                if (!p) return;
-                sharpenSlider.value = p.sharpen;
-                denoiseSelect.value = p.denoise;
-                upscaleSelect.value = p.upscale;
-                contrastSlider.value = p.contrast;
-                brightnessSlider.value = p.brightness;
+                const p = presets[name]; if (!p) return;
+                sharpenSlider.value = p.sharpen; denoiseSelect.value = p.denoise; upscaleSelect.value = p.upscale;
+                contrastSlider.value = p.contrast; brightnessSlider.value = p.brightness;
                 updateAllLabels();
                 presetBtns.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
                 const btn = presetBtns.querySelector(`[data-preset="${name}"]`);
                 if (btn) btn.classList.add('active-preset');
             }
 
-            function showToast(msg, type = 'info') {
-                const container = document.getElementById('toastContainer');
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.textContent = msg;
-                container.appendChild(toast);
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.5s';
-                    setTimeout(() => toast.remove(), 500);
-                }, 2500);
+            function showToast(msg, type='info') {
+                const c = document.getElementById('toastContainer');
+                const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+                c.appendChild(t);
+                setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; setTimeout(()=>t.remove(),500); },2500);
             }
 
-            function generateId() {
-                return 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-            }
+            function generateId() { return 'f_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
 
             function addFiles(newFiles) {
-                const valid = /\.(jpg|jpeg|png|webp|bmp|tiff?|gif)$/i;
-                let added = 0;
+                const valid = /\.(jpg|jpeg|png|webp|bmp|tiff?|gif)$/i; let added = 0;
                 Array.from(newFiles).forEach(file => {
-                    if (!file.type.startsWith('image/') && !file.name.match(valid)) {
-                        showToast(`跳过非图片: ${file.name}`, 'error');
-                        return;
-                    }
-                    if (file.size > 50 * 1024 * 1024) {
-                        showToast(`文件过大(>50MB): ${file.name}`, 'error');
-                        return;
-                    }
+                    if (!file.type.startsWith('image/') && !file.name.match(valid)) { showToast(`跳过非图片: ${file.name}`, 'error'); return; }
+                    if (file.size > 50*1024*1024) { showToast(`文件过大(>50MB): ${file.name}`, 'error'); return; }
                     const id = generateId();
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const dataURL = e.target.result;
                         const img = new Image();
                         img.onload = function() {
-                            const thumb = createThumbnail(img, 90);
-                            files.push({
-                                id,
-                                file,
-                                originalDataURL: dataURL,
-                                thumbnailDataURL: thumb,
-                                width: img.width,
-                                height: img.height,
-                                processedBlob: null,
-                                processedDataURL: null,
-                            });
+                            const thumb = createThumbnail(img, 80);
+                            files.push({ id, file, originalDataURL: dataURL, thumbnailDataURL: thumb, width: img.width, height: img.height, processedBlob: null, processedDataURL: null });
                             if (files.length === 1) activeFileId = id;
-                            renderFileList();
-                            updateButtons();
+                            renderFileList(); updateButtons();
                             if (activeFileId === id || files.length === 1) showOriginalPreview();
                         };
                         img.src = dataURL;
                     };
-                    reader.readAsDataURL(file);
-                    added++;
+                    reader.readAsDataURL(file); added++;
                 });
-                if (added > 0) showToast(`成功添加 ${added} 张图片`, 'success');
+                if (added>0) showToast(`成功添加 ${added} 张图片`, 'success');
             }
 
             function createThumbnail(img, maxSize) {
                 const canvas = document.createElement('canvas');
-                const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
-                canvas.width = Math.round(img.width * ratio);
-                canvas.height = Math.round(img.height * ratio);
-                const ctx = canvas.getContext('2d');
-                ctx.imageSmoothingEnabled = true;
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                return canvas.toDataURL('image/jpeg', 0.75);
+                const ratio = Math.min(maxSize/img.width, maxSize/img.height, 1);
+                canvas.width = Math.round(img.width*ratio); canvas.height = Math.round(img.height*ratio);
+                const ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = true;
+                ctx.drawImage(img,0,0,canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', 0.7);
             }
 
             function removeFile(id) {
                 const idx = files.findIndex(f => f.id === id);
-                if (idx >= 0) {
-                    const f = files[idx];
-                    if (f.processedDataURL && f.processedDataURL.startsWith('blob:')) URL.revokeObjectURL(f
-                        .processedDataURL);
-                    files.splice(idx, 1);
-                }
-                if (activeFileId === id) activeFileId = files.length > 0 ? files[0].id : null;
-                currentProcessedDataURL = null;
-                renderFileList();
-                updateButtons();
+                if (idx>=0) { const f=files[idx]; if(f.processedDataURL?.startsWith('blob:')) URL.revokeObjectURL(f.processedDataURL); files.splice(idx,1); }
+                if (activeFileId === id) activeFileId = files.length>0 ? files[0].id : null;
+                currentProcessedDataURL = null; renderFileList(); updateButtons();
                 if (activeFileId) {
                     const af = files.find(f => f.id === activeFileId);
-                    if (af && af.processedDataURL) {
-                        currentProcessedDataURL = af.processedDataURL;
-                        showComparePreview(af.originalDataURL, af.processedDataURL);
-                    } else showOriginalPreview();
+                    if (af?.processedDataURL) { currentProcessedDataURL = af.processedDataURL; showComparePreview(af.originalDataURL, af.processedDataURL); }
+                    else showOriginalPreview();
                 } else showPlaceholder();
             }
 
             function renderFileList() {
-                fileListEl.innerHTML = '';
-                fileCountEl.textContent = files.length;
-                if (files.length === 0) {
-                    fileListEl.innerHTML =
-                        '<div style="text-align:center;color:var(--text2);padding:20px;">还没有上传图片 📷</div>';
-                } else {
-                    files.forEach(f => {
-                        const item = document.createElement('div');
-                        item.className = 'file-item' + (f.id === activeFileId ? ' active' : '');
-                        item.innerHTML = `
-                        <img class="thumb" src="${f.thumbnailDataURL}" alt="thumb">
-                        <div class="info">
-                            <div class="name" title="${escapeHtml(f.file.name)}">${escapeHtml(f.file.name)}</div>
-                            <div class="meta">${f.width}×${f.height} · ${formatSize(f.file.size)}${f.processedBlob ? ' ✅' : ''}</div>
-                        </div>
-                        <button class="remove-btn" data-id="${f.id}">✕</button>`;
-                        item.addEventListener('click', (e) => {
-                            if (e.target.closest('.remove-btn')) return;
-                            activeFileId = f.id;
-                            renderFileList();
-                            updateButtons();
-                            if (f.processedDataURL) {
-                                currentProcessedDataURL = f.processedDataURL;
-                                showComparePreview(f.originalDataURL, f.processedDataURL);
-                            } else {
-                                currentProcessedDataURL = null;
-                                showOriginalPreview();
-                            }
-                        });
-                        item.querySelector('.remove-btn').addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            removeFile(f.id);
-                        });
-                        fileListEl.appendChild(item);
+                fileListEl.innerHTML = ''; fileCountEl.textContent = files.length;
+                if (files.length === 0) fileListEl.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;">还没有图片 📷</div>';
+                else files.forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item' + (f.id===activeFileId?' active':'');
+                    item.innerHTML = `<img class="thumb" src="${f.thumbnailDataURL}"><div class="info"><div class="name" title="${escapeHtml(f.file.name)}">${escapeHtml(f.file.name)}</div><div class="meta">${f.width}×${f.height} · ${formatSize(f.file.size)}${f.processedBlob?' ✅':''}</div></div><button class="remove-btn" data-id="${f.id}">✕</button>`;
+                    item.addEventListener('click', (e) => {
+                        if (e.target.closest('.remove-btn')) return;
+                        activeFileId = f.id; renderFileList(); updateButtons();
+                        if (f.processedDataURL) { currentProcessedDataURL = f.processedDataURL; showComparePreview(f.originalDataURL, f.processedDataURL); }
+                        else { currentProcessedDataURL = null; showOriginalPreview(); }
                     });
-                }
+                    item.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removeFile(f.id); });
+                    fileListEl.appendChild(item);
+                });
             }
 
-            function escapeHtml(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            function formatSize(bytes) {
-                if (bytes < 1024) return bytes + ' B';
-                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-            }
+            function escapeHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+            function formatSize(b) { return b<1024?b+' B':b<1024*1024?(b/1024).toFixed(1)+' KB':(b/(1024*1024)).toFixed(2)+' MB'; }
 
             function updateButtons() {
-                const hasActive = activeFileId !== null;
-                const af = hasActive ? files.find(f => f.id === activeFileId) : null;
-                btnProcessOne.disabled = !hasActive || isProcessing;
-                btnProcessAll.disabled = files.length === 0 || isProcessing;
-                btnDownloadOne.disabled = !af || !af.processedBlob;
-                btnDownloadAll.disabled = !files.some(f => f.processedBlob);
+                const af = activeFileId ? files.find(f=>f.id===activeFileId) : null;
+                btnProcessOne.disabled = !activeFileId || isProcessing;
+                btnProcessAll.disabled = files.length===0 || isProcessing;
+                btnDownloadOne.disabled = !af?.processedBlob;
+                btnDownloadAll.disabled = !files.some(f=>f.processedBlob);
             }
 
             function showPlaceholder() {
-                previewContainer.innerHTML = `
-                <div class="preview-placeholder">
-                    <span style="font-size:3rem;display:block;">🖼️</span>
-                    上传图片并点击下方按钮增强<br>在此查看前后对比
-                </div>`;
-                currentProcessedDataURL = null;
+                previewContainer.innerHTML = `<div class="preview-placeholder"><span style="font-size:3rem;display:block;">🖼️</span>上传图片并点击左侧按钮增强<br>在此查看前后对比</div><div class="zoom-controls" id="zoomControls" style="display:none;"></div>`;
+                currentScale=1; compareViewEl=afterLayerEl=sliderLineEl=null;
             }
 
             function showOriginalPreview() {
-                const af = files.find(f => f.id === activeFileId);
-                if (!af) { showPlaceholder(); return; }
-                currentProcessedDataURL = null;
+                const af = files.find(f=>f.id===activeFileId); if(!af) { showPlaceholder(); return; }
+                currentScale=1;
                 previewContainer.innerHTML = `
-                <div class="compare-view">
-                    <img src="${af.originalDataURL}" alt="原图" style="max-width:100%;max-height:100%;object-fit:contain;">
-                    <div style="position:absolute;bottom:16px;background:rgba(0,0,0,0.65);color:#ff6b6b;padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;">📷 原始图片（尚未增强）</div>
-                </div>`;
+                    <div class="compare-view" id="compareView" style="transform:scale(1);">
+                        <img src="${af.originalDataURL}" alt="原图">
+                        <div class="corner-label" style="top:10px; left:10px;">📷 原始图片（尚未增强）</div>
+                    </div>
+                    <div class="zoom-controls" id="zoomControls">
+                        <button class="zoom-btn" id="zoomOutBtn">−</button>
+                        <button class="zoom-btn" id="zoomResetBtn">1:1</button>
+                        <button class="zoom-btn" id="zoomInBtn">+</button>
+                    </div>`;
+                bindZoomEvents(); compareViewEl = document.getElementById('compareView');
             }
 
             function showComparePreview(originalDataURL, processedDataURL) {
-                compareSliderX = 50;
+                currentScale=1;
                 previewContainer.innerHTML = `
-                <div class="compare-view" id="compareView">
-                    <img src="${processedDataURL}" alt="增强后" style="max-width:100%;max-height:100%;object-fit:contain;">
-                    <div class="after-layer" id="afterLayer" style="clip-path:inset(0 50% 0 0);">
-                        <img src="${originalDataURL}" alt="原始">
+                    <div class="compare-view" id="compareView" style="transform:scale(1);">
+                        <img src="${processedDataURL}" alt="增强后">
+                        <div class="after-layer" id="afterLayer" style="clip-path:inset(0 50% 0 0);">
+                            <img src="${originalDataURL}" alt="原始">
+                        </div>
+                        <div class="compare-slider-line" id="compareSliderLine" style="left:50%;"></div>
+                        <div class="corner-label" style="top:10px; left:10px;">📷 原始</div>
+                        <div class="corner-label after" style="top:10px; right:10px;">✨ 增强后</div>
                     </div>
-                    <div class="compare-slider-line" id="compareSliderLine" style="left:50%;"></div>
-                    <div class="compare-labels">
-                        <span class="compare-label before">📷 原始</span>
-                        <span class="compare-label after">✨ 增强后</span>
-                    </div>
-                </div>`;
+                    <div class="zoom-controls" id="zoomControls">
+                        <button class="zoom-btn" id="zoomOutBtn">−</button>
+                        <button class="zoom-btn" id="zoomResetBtn">1:1</button>
+                        <button class="zoom-btn" id="zoomInBtn">+</button>
+                    </div>`;
+                bindZoomEvents();
+                compareViewEl = document.getElementById('compareView');
+                afterLayerEl = document.getElementById('afterLayer');
+                sliderLineEl = document.getElementById('compareSliderLine');
                 setupCompareSlider();
             }
 
+            function bindZoomEvents() {
+                const zoomOut = document.getElementById('zoomOutBtn');
+                const zoomReset = document.getElementById('zoomResetBtn');
+                const zoomIn = document.getElementById('zoomInBtn');
+                if(zoomOut) zoomOut.addEventListener('click', ()=>adjustScale(-SCALE_STEP));
+                if(zoomReset) zoomReset.addEventListener('click', ()=>setScale(1));
+                if(zoomIn) zoomIn.addEventListener('click', ()=>adjustScale(SCALE_STEP));
+                previewContainer.addEventListener('wheel', (e)=>{
+                    if(!compareViewEl) return;
+                    e.preventDefault();
+                    adjustScale(e.deltaY>0 ? -SCALE_STEP : SCALE_STEP);
+                }, {passive:false});
+            }
+
+            function adjustScale(delta) {
+                let newScale = currentScale + delta;
+                newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale*10)/10));
+                setScale(newScale);
+            }
+
+            function setScale(scale) {
+                if(!compareViewEl) return;
+                currentScale = scale;
+                compareViewEl.style.transform = `scale(${scale})`;
+            }
+
             function setupCompareSlider() {
-                const sliderLine = document.getElementById('compareSliderLine');
-                const afterLayer = document.getElementById('afterLayer');
-                const compareView = document.getElementById('compareView');
-                if (!sliderLine || !afterLayer || !compareView) return;
-
+                if(!sliderLineEl || !afterLayerEl || !compareViewEl) return;
+                let dragging = false;
                 function updateSlider(clientX) {
-                    const rect = compareView.getBoundingClientRect();
+                    const rect = compareViewEl.getBoundingClientRect();
                     let x = clientX - rect.left;
-                    x = Math.max(10, Math.min(rect.width - 10, x));
-                    const pct = (x / rect.width) * 100;
-                    compareSliderX = pct;
-                    sliderLine.style.left = pct + '%';
-                    afterLayer.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+                    x = Math.max(10, Math.min(rect.width-10, x));
+                    const pct = (x/rect.width)*100;
+                    sliderLineEl.style.left = pct+'%';
+                    afterLayerEl.style.clipPath = `inset(0 ${100-pct}% 0 0)`;
                 }
-
-                sliderLine.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    isDraggingSlider = true;
-                    document.body.style.userSelect = 'none';
-                });
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDraggingSlider) return;
-                    updateSlider(e.clientX);
-                });
-                document.addEventListener('mouseup', () => {
-                    isDraggingSlider = false;
-                    document.body.style.userSelect = '';
-                });
-                sliderLine.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    isDraggingSlider = true;
-                    document.body.style.userSelect = 'none';
-                });
-                document.addEventListener('touchmove', (e) => {
-                    if (!isDraggingSlider) return;
-                    updateSlider(e.touches[0].clientX);
-                }, { passive: false });
-                document.addEventListener('touchend', () => {
-                    isDraggingSlider = false;
-                    document.body.style.userSelect = '';
-                });
-                compareView.addEventListener('click', (e) => {
-                    if (e.target === sliderLine || sliderLine.contains(e.target)) return;
+                sliderLineEl.addEventListener('mousedown', (e)=>{ e.preventDefault(); dragging=true; document.body.style.userSelect='none'; });
+                document.addEventListener('mousemove', (e)=>{ if(!dragging) return; updateSlider(e.clientX); });
+                document.addEventListener('mouseup', ()=>{ dragging=false; document.body.style.userSelect=''; });
+                sliderLineEl.addEventListener('touchstart', (e)=>{ e.preventDefault(); dragging=true; document.body.style.userSelect='none'; });
+                document.addEventListener('touchmove', (e)=>{ if(!dragging) return; updateSlider(e.touches[0].clientX); }, {passive:false});
+                document.addEventListener('touchend', ()=>{ dragging=false; document.body.style.userSelect=''; });
+                compareViewEl.addEventListener('click', (e)=>{
+                    if(e.target===sliderLineEl || sliderLineEl?.contains(e.target)) return;
                     updateSlider(e.clientX);
                 });
             }
 
-            function loadImageFromDataURL(dataURL) {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.onerror = reject;
-                    img.src = dataURL;
-                });
-            }
+            function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
+            function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
+            function canvasToBlob(canvas) { return new Promise(r=>canvas.toBlob(r,'image/png',0.95)); }
+            function boxBlurH(d,r){ const {data,width,height}=d; const o=new Uint8ClampedArray(data.length); for(let y=0;y<height;y++){ for(let x=0;x<width;x++){ let rs=0,gs=0,bs=0,c=0; const x0=Math.max(0,x-r),x1=Math.min(width-1,x+r); for(let xi=x0;xi<=x1;xi++){ const i=(y*width+xi)*4; rs+=data[i];gs+=data[i+1];bs+=data[i+2];c++; } const oi=(y*width+x)*4; o[oi]=Math.round(rs/c); o[oi+1]=Math.round(gs/c); o[oi+2]=Math.round(bs/c); o[oi+3]=data[oi+3]; } } return new ImageData(o,width,height); }
+            function boxBlurV(d,r){ const {data,width,height}=d; const o=new Uint8ClampedArray(data.length); for(let y=0;y<height;y++){ for(let x=0;x<width;x++){ let rs=0,gs=0,bs=0,c=0; const y0=Math.max(0,y-r),y1=Math.min(height-1,y+r); for(let yi=y0;yi<=y1;yi++){ const i=(yi*width+x)*4; rs+=data[i];gs+=data[i+1];bs+=data[i+2];c++; } const oi=(y*width+x)*4; o[oi]=Math.round(rs/c); o[oi+1]=Math.round(gs/c); o[oi+2]=Math.round(bs/c); o[oi+3]=data[oi+3]; } } return new ImageData(o,width,height); }
+            function gaussianBlur(canvas,sigma){ const ctx=canvas.getContext('2d'); const r=Math.max(1,Math.round(sigma*1.5)); let idata=ctx.getImageData(0,0,canvas.width,canvas.height); for(let i=0;i<3;i++){ idata=boxBlurH(idata,r); idata=boxBlurV(idata,r); } const c=document.createElement('canvas'); c.width=canvas.width; c.height=canvas.height; c.getContext('2d').putImageData(idata,0,0); return c; }
+            function unsharpMask(canvas,amount){ const blurred=gaussianBlur(canvas,2.0); const ctx=canvas.getContext('2d'); const orig=ctx.getImageData(0,0,canvas.width,canvas.height); const blurCtx=blurred.getContext('2d'); const blur=blurCtx.getImageData(0,0,canvas.width,canvas.height); const out=new Uint8ClampedArray(orig.data.length); const amt=amount/100; for(let i=0;i<orig.data.length;i+=4){ for(let c=0;c<3;c++){ let v=orig.data[i+c]+(orig.data[i+c]-blur.data[i+c])*amt; out[i+c]=Math.max(0,Math.min(255,Math.round(v))); } out[i+3]=orig.data[i+3]; } const rc=document.createElement('canvas'); rc.width=canvas.width; rc.height=canvas.height; rc.getContext('2d').putImageData(new ImageData(out,canvas.width,canvas.height),0,0); return rc; }
+            function medianFilter(canvas,size){ const ctx=canvas.getContext('2d'); const idata=ctx.getImageData(0,0,canvas.width,canvas.height); const {data,width,height}=idata; const out=new Uint8ClampedArray(data.length); const half=Math.floor(size/2); for(let y=0;y<height;y++){ for(let x=0;x<width;x++){ const rv=[],gv=[],bv=[]; for(let dy=-half;dy<=half;dy++){ for(let dx=-half;dx<=half;dx++){ const nx=Math.min(width-1,Math.max(0,x+dx)); const ny=Math.min(height-1,Math.max(0,y+dy)); const i=(ny*width+nx)*4; rv.push(data[i]); gv.push(data[i+1]); bv.push(data[i+2]); } } rv.sort((a,b)=>a-b); gv.sort((a,b)=>a-b); bv.sort((a,b)=>a-b); const m=Math.floor(rv.length/2); const o=(y*width+x)*4; out[o]=rv[m]; out[o+1]=gv[m]; out[o+2]=bv[m]; out[o+3]=data[o+3]; } } const rc=document.createElement('canvas'); rc.width=width; rc.height=height; rc.getContext('2d').putImageData(new ImageData(out,width,height),0,0); return rc; }
+            function adjustContrastBrightness(canvas,contrastPercent,brightness){ const ctx=canvas.getContext('2d'); const idata=ctx.getImageData(0,0,canvas.width,canvas.height); const factor=1+contrastPercent/100; for(let i=0;i<idata.data.length;i+=4){ for(let c=0;c<3;c++){ let v=(idata.data[i+c]-128)*factor+128+brightness; idata.data[i+c]=Math.max(0,Math.min(255,Math.round(v))); } } const rc=document.createElement('canvas'); rc.width=canvas.width; rc.height=canvas.height; rc.getContext('2d').putImageData(idata,0,0); return rc; }
+            function upscaleImage(canvas,scale){ if(scale<=1) return canvas; const tw=Math.round(canvas.width*scale), th=Math.round(canvas.height*scale); const steps=scale<=1.5?1:scale<=2?2:scale<=3?3:4; const stepScale=Math.pow(scale,1/steps); let current=canvas; for(let i=0;i<steps;i++){ const sw=Math.round(current.width*stepScale), sh=Math.round(current.height*stepScale); const temp=document.createElement('canvas'); temp.width=sw; temp.height=sh; const tctx=temp.getContext('2d'); tctx.imageSmoothingEnabled=true; tctx.imageSmoothingQuality='high'; tctx.drawImage(current,0,0,sw,sh); current=temp; } const final=document.createElement('canvas'); final.width=tw; final.height=th; const fctx=final.getContext('2d'); fctx.imageSmoothingEnabled=true; fctx.imageSmoothingQuality='high'; fctx.drawImage(current,0,0,tw,th); return final; }
+            async function enhanceImage(dataURL,params){ const img=await loadImageFromDataURL(dataURL); let canvas=imageToCanvas(img); if(params.denoise==='1') canvas=medianFilter(canvas,3); else if(params.denoise==='2') canvas=medianFilter(canvas,5); canvas=upscaleImage(canvas,parseFloat(params.upscale)); if(parseInt(params.sharpen)>0) canvas=unsharpMask(canvas,parseInt(params.sharpen)); canvas=adjustContrastBrightness(canvas,parseInt(params.contrast),parseInt(params.brightness)); return canvas; }
+            async function processSingleFile(fileObj){ const params={ sharpen:sharpenSlider.value, denoise:denoiseSelect.value, upscale:upscaleSelect.value, contrast:contrastSlider.value, brightness:brightnessSlider.value }; const resultCanvas=await enhanceImage(fileObj.originalDataURL,params); const dataURL=resultCanvas.toDataURL('image/png',0.95); fileObj.processedDataURL=dataURL; fileObj.processedBlob=await canvasToBlob(resultCanvas); return dataURL; }
 
-            function imageToCanvas(img) {
-                const c = document.createElement('canvas');
-                c.width = img.width;
-                c.height = img.height;
-                c.getContext('2d').drawImage(img, 0, 0);
-                return c;
-            }
+            async function handleProcessOne(){ if(isProcessing||!activeFileId) return; const fileObj=files.find(f=>f.id===activeFileId); if(!fileObj) return; isProcessing=true; updateButtons(); showProgress(true); setProgress(15,'增强中...'); try{ const dataURL=await processSingleFile(fileObj); currentProcessedDataURL=dataURL; setProgress(100,'完成 ✨'); showComparePreview(fileObj.originalDataURL,dataURL); updateButtons(); renderFileList(); showToast('增强完成！拖动中间线对比','success'); }catch(e){ showToast('处理失败: '+e.message,'error'); } finally{ isProcessing=false; updateButtons(); setTimeout(()=>showProgress(false),1500); } }
+            async function handleProcessAll(){ if(isProcessing||files.length===0) return; isProcessing=true; updateButtons(); showProgress(true); const total=files.length; for(let i=0;i<total;i++){ setProgress(Math.round((i/total)*100),`处理中 ${i+1}/${total}`); await processSingleFile(files[i]); if(files[i].id===activeFileId&&files[i].processedDataURL){ currentProcessedDataURL=files[i].processedDataURL; showComparePreview(files[i].originalDataURL,files[i].processedDataURL); } } setProgress(100,`全部完成！共${total}张`); updateButtons(); renderFileList(); showToast(`批量处理完成！共 ${total} 张`,'success'); isProcessing=false; updateButtons(); setTimeout(()=>showProgress(false),2000); }
 
-            function canvasToBlob(canvas) {
-                return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
-            }
+            function showProgress(show){ progressWrap.style.display=show?'block':'none'; if(!show) progressFill.style.width='0%'; }
+            function setProgress(pct,text){ progressFill.style.width=pct+'%'; progressText.textContent=text||''; progressText.classList.toggle('processing-indicator',pct>0&&pct<100); }
 
-            function boxBlurH(imageData, r) {
-                const { data, width, height } = imageData;
-                const out = new Uint8ClampedArray(data.length);
-                for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        let rs = 0,
-                            gs = 0,
-                            bs = 0,
-                            c = 0;
-                        const x0 = Math.max(0, x - r),
-                            x1 = Math.min(width - 1, x + r);
-                        for (let xi = x0; xi <= x1; xi++) {
-                            const i = (y * width + xi) * 4;
-                            rs += data[i];
-                            gs += data[i + 1];
-                            bs += data[i + 2];
-                            c++;
-                        }
-                        const o = (y * width + x) * 4;
-                        out[o] = Math.round(rs / c);
-                        out[o + 1] = Math.round(gs / c);
-                        out[o + 2] = Math.round(bs / c);
-                        out[o + 3] = data[o + 3];
-                    }
-                }
-                return new ImageData(out, width, height);
-            }
+            function triggerDownload(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),3000); }
+            function getOutputFilename(orig){ const dot=orig.lastIndexOf('.'); return (dot>0?orig.substring(0,dot):orig)+'_enhanced.png'; }
+            function handleDownloadOne(){ const f=files.find(f=>f.id===activeFileId); if(!f?.processedBlob) return showToast('请先增强','info'); triggerDownload(f.processedBlob, getOutputFilename(f.file.name)); showToast('下载开始','success'); }
+            async function handleDownloadAll(){ const processed=files.filter(f=>f.processedBlob); if(processed.length===0) return showToast('没有已处理的图片','info'); if(processed.length===1) return triggerDownload(processed[0].processedBlob, getOutputFilename(processed[0].file.name)); if(typeof JSZip==='undefined'){ processed.forEach((f,i)=>setTimeout(()=>triggerDownload(f.processedBlob, getOutputFilename(f.file.name)), i*300)); return; } const zip=new JSZip(); const nameMap={}; processed.forEach(f=>{ let name=getOutputFilename(f.file.name); if(nameMap[name]){ const d=name.lastIndexOf('.'); name=name.substring(0,d)+'_'+nameMap[name]+name.substring(d); } nameMap[name]=(nameMap[name]||0)+1; zip.file(name, f.processedBlob); }); const blob=await zip.generateAsync({type:'blob', compression:'DEFLATE'}); triggerDownload(blob, `熊啊熊增强_${Date.now()}.zip`); showToast(`打包下载 ${processed.length} 张`,'success'); }
+            function handleClearAll(){ if(isProcessing) return; files.forEach(f=>{ if(f.processedDataURL?.startsWith('blob:')) URL.revokeObjectURL(f.processedDataURL); }); files=[]; activeFileId=null; currentProcessedDataURL=null; renderFileList(); updateButtons(); showPlaceholder(); showProgress(false); showToast('已清空','info'); }
 
-            function boxBlurV(imageData, r) {
-                const { data, width, height } = imageData;
-                const out = new Uint8ClampedArray(data.length);
-                for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        let rs = 0,
-                            gs = 0,
-                            bs = 0,
-                            c = 0;
-                        const y0 = Math.max(0, y - r),
-                            y1 = Math.min(height - 1, y + r);
-                        for (let yi = y0; yi <= y1; yi++) {
-                            const i = (yi * width + x) * 4;
-                            rs += data[i];
-                            gs += data[i + 1];
-                            bs += data[i + 2];
-                            c++;
-                        }
-                        const o = (y * width + x) * 4;
-                        out[o] = Math.round(rs / c);
-                        out[o + 1] = Math.round(gs / c);
-                        out[o + 2] = Math.round(bs / c);
-                        out[o + 3] = data[o + 3];
-                    }
-                }
-                return new ImageData(out, width, height);
-            }
-
-            function gaussianBlur(canvas, sigma) {
-                const ctx = canvas.getContext('2d');
-                const r = Math.max(1, Math.round(sigma * 1.5));
-                let idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                for (let i = 0; i < 3; i++) {
-                    idata = boxBlurH(idata, r);
-                    idata = boxBlurV(idata, r);
-                }
-                const c = document.createElement('canvas');
-                c.width = canvas.width;
-                c.height = canvas.height;
-                c.getContext('2d').putImageData(idata, 0, 0);
-                return c;
-            }
-
-            function unsharpMask(canvas, amount) {
-                const blurred = gaussianBlur(canvas, 2.0);
-                const ctx = canvas.getContext('2d');
-                const orig = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const blurCtx = blurred.getContext('2d');
-                const blur = blurCtx.getImageData(0, 0, canvas.width, canvas.height);
-                const out = new Uint8ClampedArray(orig.data.length);
-                const amt = amount / 100;
-                for (let i = 0; i < orig.data.length; i += 4) {
-                    for (let c = 0; c < 3; c++) {
-                        let v = orig.data[i + c] + (orig.data[i + c] - blur.data[i + c]) * amt;
-                        out[i + c] = Math.max(0, Math.min(255, Math.round(v)));
-                    }
-                    out[i + 3] = orig.data[i + 3];
-                }
-                const rc = document.createElement('canvas');
-                rc.width = canvas.width;
-                rc.height = canvas.height;
-                rc.getContext('2d').putImageData(new ImageData(out, canvas.width, canvas.height), 0, 0);
-                return rc;
-            }
-
-            function medianFilter(canvas, size) {
-                const ctx = canvas.getContext('2d');
-                const idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const { data, width, height } = idata;
-                const out = new Uint8ClampedArray(data.length);
-                const half = Math.floor(size / 2);
-                for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        const rv = [],
-                            gv = [],
-                            bv = [];
-                        for (let dy = -half; dy <= half; dy++) {
-                            for (let dx = -half; dx <= half; dx++) {
-                                const nx = Math.min(width - 1, Math.max(0, x + dx));
-                                const ny = Math.min(height - 1, Math.max(0, y + dy));
-                                const i = (ny * width + nx) * 4;
-                                rv.push(data[i]);
-                                gv.push(data[i + 1]);
-                                bv.push(data[i + 2]);
-                            }
-                        }
-                        rv.sort((a, b) => a - b);
-                        gv.sort((a, b) => a - b);
-                        bv.sort((a, b) => a - b);
-                        const m = Math.floor(rv.length / 2);
-                        const o = (y * width + x) * 4;
-                        out[o] = rv[m];
-                        out[o + 1] = gv[m];
-                        out[o + 2] = bv[m];
-                        out[o + 3] = data[o + 3];
-                    }
-                }
-                const rc = document.createElement('canvas');
-                rc.width = width;
-                rc.height = height;
-                rc.getContext('2d').putImageData(new ImageData(out, width, height), 0, 0);
-                return rc;
-            }
-
-            function adjustContrastBrightness(canvas, contrastPercent, brightness) {
-                const ctx = canvas.getContext('2d');
-                const idata = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const factor = 1 + contrastPercent / 100;
-                for (let i = 0; i < idata.data.length; i += 4) {
-                    for (let c = 0; c < 3; c++) {
-                        let v = (idata.data[i + c] - 128) * factor + 128 + brightness;
-                        idata.data[i + c] = Math.max(0, Math.min(255, Math.round(v)));
-                    }
-                }
-                const rc = document.createElement('canvas');
-                rc.width = canvas.width;
-                rc.height = canvas.height;
-                rc.getContext('2d').putImageData(idata, 0, 0);
-                return rc;
-            }
-
-            function upscaleImage(canvas, scale) {
-                if (scale <= 1) return canvas;
-                const tw = Math.round(canvas.width * scale);
-                const th = Math.round(canvas.height * scale);
-                const steps = scale <= 1.5 ? 1 : scale <= 2 ? 2 : scale <= 3 ? 3 : 4;
-                const stepScale = Math.pow(scale, 1 / steps);
-                let current = canvas;
-                for (let i = 0; i < steps; i++) {
-                    const sw = Math.round(current.width * stepScale);
-                    const sh = Math.round(current.height * stepScale);
-                    const temp = document.createElement('canvas');
-                    temp.width = sw;
-                    temp.height = sh;
-                    const tctx = temp.getContext('2d');
-                    tctx.imageSmoothingEnabled = true;
-                    tctx.imageSmoothingQuality = 'high';
-                    tctx.drawImage(current, 0, 0, sw, sh);
-                    current = temp;
-                }
-                const final = document.createElement('canvas');
-                final.width = tw;
-                final.height = th;
-                const fctx = final.getContext('2d');
-                fctx.imageSmoothingEnabled = true;
-                fctx.imageSmoothingQuality = 'high';
-                fctx.drawImage(current, 0, 0, tw, th);
-                return final;
-            }
-
-            async function enhanceImage(dataURL, params) {
-                const img = await loadImageFromDataURL(dataURL);
-                let canvas = imageToCanvas(img);
-                if (params.denoise === '1') canvas = medianFilter(canvas, 3);
-                else if (params.denoise === '2') canvas = medianFilter(canvas, 5);
-                canvas = upscaleImage(canvas, parseFloat(params.upscale));
-                if (parseInt(params.sharpen) > 0) canvas = unsharpMask(canvas, parseInt(params.sharpen));
-                canvas = adjustContrastBrightness(canvas, parseInt(params.contrast), parseInt(params.brightness));
-                return canvas;
-            }
-
-            async function processSingleFile(fileObj) {
-                const params = {
-                    sharpen: sharpenSlider.value,
-                    denoise: denoiseSelect.value,
-                    upscale: upscaleSelect.value,
-                    contrast: contrastSlider.value,
-                    brightness: brightnessSlider.value,
-                };
-                const resultCanvas = await enhanceImage(fileObj.originalDataURL, params);
-                const dataURL = resultCanvas.toDataURL('image/png', 0.95);
-                fileObj.processedDataURL = dataURL;
-                fileObj.processedBlob = await canvasToBlob(resultCanvas);
-                return dataURL;
-            }
-
-            async function handleProcessOne() {
-                if (isProcessing || !activeFileId) return;
-                const fileObj = files.find(f => f.id === activeFileId);
-                if (!fileObj) return;
-                isProcessing = true;
-                updateButtons();
-                showProgress(true);
-                setProgress(15, '增强中...');
-                try {
-                    const dataURL = await processSingleFile(fileObj);
-                    currentProcessedDataURL = dataURL;
-                    setProgress(100, '完成 ✨');
-                    showComparePreview(fileObj.originalDataURL, dataURL);
-                    updateButtons();
-                    renderFileList();
-                    showToast('增强完成！拖动中间线对比', 'success');
-                } catch (e) {
-                    showToast('处理失败: ' + e.message, 'error');
-                } finally {
-                    isProcessing = false;
-                    updateButtons();
-                    setTimeout(() => showProgress(false), 1500);
-                }
-            }
-
-            async function handleProcessAll() {
-                if (isProcessing || files.length === 0) return;
-                isProcessing = true;
-                updateButtons();
-                showProgress(true);
-                const total = files.length;
-                for (let i = 0; i < total; i++) {
-                    setProgress(Math.round((i / total) * 100), `处理中 ${i+1}/${total}`);
-                    await processSingleFile(files[i]);
-                    if (files[i].id === activeFileId && files[i].processedDataURL) {
-                        currentProcessedDataURL = files[i].processedDataURL;
-                        showComparePreview(files[i].originalDataURL, files[i].processedDataURL);
-                    }
-                }
-                setProgress(100, `全部完成！共${total}张`);
-                updateButtons();
-                renderFileList();
-                showToast(`批量处理完成！共 ${total} 张`, 'success');
-                isProcessing = false;
-                updateButtons();
-                setTimeout(() => showProgress(false), 2000);
-            }
-
-            function showProgress(show) {
-                progressWrap.style.display = show ? 'block' : 'none';
-                if (!show) progressFill.style.width = '0%';
-            }
-
-            function setProgress(pct, text) {
-                progressFill.style.width = pct + '%';
-                progressText.textContent = text || '';
-                progressText.classList.toggle('processing-indicator', pct > 0 && pct < 100);
-            }
-
-            function triggerDownload(blob, filename) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 3000);
-            }
-
-            function getOutputFilename(orig) {
-                const dot = orig.lastIndexOf('.');
-                const base = dot > 0 ? orig.substring(0, dot) : orig;
-                return `${base}_enhanced.png`;
-            }
-
-            function handleDownloadOne() {
-                const f = files.find(f => f.id === activeFileId);
-                if (!f || !f.processedBlob) return showToast('请先增强', 'info');
-                triggerDownload(f.processedBlob, getOutputFilename(f.file.name));
-                showToast('下载开始', 'success');
-            }
-
-            async function handleDownloadAll() {
-                const processed = files.filter(f => f.processedBlob);
-                if (processed.length === 0) return showToast('没有已处理的图片', 'info');
-                if (processed.length === 1) {
-                    triggerDownload(processed[0].processedBlob, getOutputFilename(processed[0].file.name));
-                    return;
-                }
-                if (typeof JSZip === 'undefined') {
-                    processed.forEach((f, i) => setTimeout(() => triggerDownload(f.processedBlob, getOutputFilename(f.file
-                        .name)), i * 300));
-                    return;
-                }
-                const zip = new JSZip();
-                const nameMap = {};
-                processed.forEach(f => {
-                    let name = getOutputFilename(f.file.name);
-                    if (nameMap[name]) {
-                        const d = name.lastIndexOf('.');
-                        name = `${name.substring(0,d)}_${nameMap[name]}${name.substring(d)}`;
-                    }
-                    nameMap[name] = (nameMap[name] || 0) + 1;
-                    zip.file(name, f.processedBlob);
-                });
-                const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-                triggerDownload(blob, `熊啊熊增强_${Date.now()}.zip`);
-                showToast(`打包下载 ${processed.length} 张`, 'success');
-            }
-
-            function handleClearAll() {
-                if (isProcessing) return;
-                files.forEach(f => { if (f.processedDataURL && f.processedDataURL.startsWith('blob:')) URL
-                        .revokeObjectURL(f.processedDataURL); });
-                files = [];
-                activeFileId = null;
-                currentProcessedDataURL = null;
-                renderFileList();
-                updateButtons();
-                showPlaceholder();
-                showProgress(false);
-                showToast('已清空', 'info');
-            }
-
-            function updateAllLabels() {
-                sharpenValEl.textContent = sharpenSlider.value + '%';
-                const dnMap = { '0': '关闭', '1': '低 (3×3)', '2': '中 (5×5)' };
-                denoiseValEl.textContent = dnMap[denoiseSelect.value];
-                const usMap = { '1': '1×', '1.5': '1.5×', '2': '2×', '3': '3×', '4': '4×' };
-                upscaleValEl.textContent = usMap[upscaleSelect.value] + ' 放大';
-                contrastValEl.textContent = contrastSlider.value + '%';
+            function updateAllLabels(){
+                sharpenValEl.textContent = sharpenSlider.value+'%';
+                denoiseValEl.textContent = {'0':'关闭','1':'低 (3×3)','2':'中 (5×5)'}[denoiseSelect.value];
+                upscaleValEl.textContent = ({'1':'1×','1.5':'1.5×','2':'2×','3':'3×','4':'4×'})[upscaleSelect.value]+' 放大';
+                contrastValEl.textContent = contrastSlider.value+'%';
                 brightnessValEl.textContent = brightnessSlider.value;
             }
 
-            // 主题切换
-            function setTheme(isDark) {
-                if (isDark) {
-                    document.body.classList.add('dark-mode');
-                    themeToggle.textContent = '☀️';
-                    localStorage.setItem('bear-theme', 'dark');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                    themeToggle.textContent = '🌙';
-                    localStorage.setItem('bear-theme', 'light');
-                }
-            }
-            const savedTheme = localStorage.getItem('bear-theme');
-            if (savedTheme === 'dark') setTheme(true);
-            else setTheme(false);
-            themeToggle.addEventListener('click', () => setTheme(!document.body.classList.contains('dark-mode')));
+            function setTheme(isDark){ if(isDark){ document.body.classList.add('dark-mode'); themeToggle.textContent='☀️'; localStorage.setItem('bear-theme','dark'); } else { document.body.classList.remove('dark-mode'); themeToggle.textContent='🌙'; localStorage.setItem('bear-theme','light'); } }
+            const savedTheme = localStorage.getItem('bear-theme'); if(savedTheme==='dark') setTheme(true); else setTheme(false);
+            themeToggle.addEventListener('click', ()=>setTheme(!document.body.classList.contains('dark-mode')));
 
-            // 事件绑定
-            uploadZone.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', e => {
-                if (e.target.files.length) { addFiles(e.target.files);
-                    fileInput.value = ''; }
-            });
-            uploadZone.addEventListener('dragover', e => { e.preventDefault();
-                uploadZone.classList.add('drag-over'); });
-            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-            uploadZone.addEventListener('drop', e => {
-                e.preventDefault();
-                uploadZone.classList.remove('drag-over');
-                if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
-            });
-            document.addEventListener('dragover', e => {
-                if (e.target.closest('#uploadZone') || e.target.closest('#previewContainer')) e.preventDefault();
-            });
-            document.addEventListener('drop', e => {
-                if (e.target.closest('#uploadZone') || (e.target.closest('#previewContainer') && e.dataTransfer
-                        .files.length)) {
-                    e.preventDefault();
-                    addFiles(e.dataTransfer.files);
-                }
-            });
-            [sharpenSlider, contrastSlider, brightnessSlider].forEach(s => s.addEventListener('input',
-            updateAllLabels));
-            [denoiseSelect, upscaleSelect].forEach(s => s.addEventListener('change', updateAllLabels));
-            presetBtns.addEventListener('click', e => {
-                const btn = e.target.closest('.preset-btn');
-                if (!btn) return;
-                applyPreset(btn.dataset.preset);
-            });
+            uploadZone.addEventListener('click', ()=>fileInput.click());
+            fileInput.addEventListener('change', e=>{ if(e.target.files.length){ addFiles(e.target.files); fileInput.value=''; } });
+            uploadZone.addEventListener('dragover', e=>{ e.preventDefault(); uploadZone.classList.add('drag-over'); });
+            uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag-over'));
+            uploadZone.addEventListener('drop', e=>{ e.preventDefault(); uploadZone.classList.remove('drag-over'); if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+            document.addEventListener('dragover', e=>{ if(e.target.closest('#uploadZone')||e.target.closest('#previewContainer')) e.preventDefault(); });
+            document.addEventListener('drop', e=>{ if(e.target.closest('#uploadZone')||(e.target.closest('#previewContainer')&&e.dataTransfer.files.length)){ e.preventDefault(); addFiles(e.dataTransfer.files); } });
+            [sharpenSlider, contrastSlider, brightnessSlider].forEach(s=>s.addEventListener('input', updateAllLabels));
+            [denoiseSelect, upscaleSelect].forEach(s=>s.addEventListener('change', updateAllLabels));
+            presetBtns.addEventListener('click', e=>{ const btn=e.target.closest('.preset-btn'); if(!btn) return; applyPreset(btn.dataset.preset); });
             btnProcessOne.addEventListener('click', handleProcessOne);
             btnProcessAll.addEventListener('click', handleProcessAll);
             btnDownloadOne.addEventListener('click', handleDownloadOne);
             btnDownloadAll.addEventListener('click', handleDownloadAll);
-            btnClearAll.addEventListener('click', handleClearAll);
+            btnListClear.addEventListener('click', handleClearAll);
 
-            document.addEventListener('keydown', e => {
-                if (e.ctrlKey && e.key === 'Enter') { e.preventDefault();
-                    handleProcessAll(); } else if (e.key === 'Enter' && !e.ctrlKey && !isProcessing && activeFileId) { e
-                        .preventDefault();
-                    handleProcessOne(); } else if (e.ctrlKey && e.key === 's') { e.preventDefault();
-                    handleDownloadOne(); } else if (e.ctrlKey && e.key === 'd') { e.preventDefault();
-                    handleDownloadAll(); }
+            document.addEventListener('keydown', e=>{
+                if(e.ctrlKey && e.key==='Enter'){ e.preventDefault(); handleProcessAll(); }
+                else if(e.key==='Enter' && !e.ctrlKey && !isProcessing && activeFileId){ e.preventDefault(); handleProcessOne(); }
+                else if(e.ctrlKey && e.key==='s'){ e.preventDefault(); handleDownloadOne(); }
+                else if(e.ctrlKey && e.key==='d'){ e.preventDefault(); handleDownloadAll(); }
             });
 
-            applyPreset('mild');
-            updateAllLabels();
-            updateButtons();
-            showPlaceholder();
+            applyPreset('mild'); updateAllLabels(); updateButtons(); showPlaceholder();
         })();
     </script>
 </body>
