@@ -125,7 +125,8 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
             transform-origin: 0 0;
-            transition: transform 0.15s ease;
+            will-change: transform;
+            transition: transform 0.05s ease-out;
         }
         .compare-view img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
         .compare-view .after-layer {
@@ -136,10 +137,11 @@
             max-width: 100%; max-height: 100%; object-fit: contain;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
-        /* 中间线独立于图片容器 */
+        /* 中间线固定在预览容器内 */
         .compare-slider-line {
             position: absolute; top: 0; bottom: 0; width: 5px; background: #ffffff;
             cursor: col-resize; z-index: 25; box-shadow: 0 0 14px rgba(0,0,0,0.6); touch-action: none;
+            will-change: left;
         }
         .compare-slider-line::before {
             content: ''; position: absolute; left: -18px; right: -18px; top: 0; bottom: 0;
@@ -387,6 +389,16 @@
             const MIN_SCALE = 0.5, MAX_SCALE = 4;
             const ZOOM_LEVELS = [0.5, 1, 2, 3, 4];
 
+            // 缓存预览容器尺寸，避免频繁读取导致回流
+            let containerWidth = 0, containerHeight = 0;
+            function updateContainerSize() {
+                containerWidth = previewContainer.clientWidth;
+                containerHeight = previewContainer.clientHeight;
+            }
+            // 初始及窗口大小改变时更新
+            window.addEventListener('resize', updateContainerSize);
+            // 在每次显示预览时也会调用
+
             function updateZoomButtons() {
                 const hasView = compareViewEl !== null;
                 zoomOutBtn.disabled = !hasView;
@@ -503,6 +515,7 @@
 
             function showOriginalPreview() {
                 const af = files.find(f=>f.id===activeFileId); if(!af) { showPlaceholder(); return; }
+                updateContainerSize();
                 currentScale = 1; dragOffsetX = dragOffsetY = 0;
                 previewContainer.innerHTML = `
                     <div class="compare-view" id="compareView" style="transform: translate(0px, 0px) scale(1);">
@@ -511,9 +524,11 @@
                     <div class="corner-label" style="bottom:10px; left:10px;">📷 原始图片（尚未增强）</div>`;
                 compareViewEl = document.getElementById('compareView');
                 updateZoomButtons();
+                applyBoundary(); // 初始居中
             }
 
             function showComparePreview(originalDataURL, processedDataURL) {
+                updateContainerSize();
                 currentScale = 1; dragOffsetX = dragOffsetY = 0;
                 previewContainer.innerHTML = `
                     <div class="compare-view" id="compareView" style="transform: translate(0px, 0px) scale(1);">
@@ -530,6 +545,7 @@
                 sliderLineEl = document.getElementById('compareSliderLine');
                 setupCompareSlider();
                 updateZoomButtons();
+                applyBoundary();
             }
 
             function setupCompareSlider() {
@@ -553,34 +569,33 @@
 
             function applyBoundary() {
                 if (!compareViewEl) return;
-                const cw = previewContainer.clientWidth;
-                const ch = previewContainer.clientHeight;
-                const scaledW = cw * currentScale;
-                const scaledH = ch * currentScale;
+                if (containerWidth === 0 || containerHeight === 0) updateContainerSize();
+                const scaledW = containerWidth * currentScale;
+                const scaledH = containerHeight * currentScale;
 
-                // 限制X方向
-                if (scaledW > cw) {
-                    dragOffsetX = Math.min(0, Math.max(cw - scaledW, dragOffsetX));
+                // 限制X方向：缩放后图片宽度大于容器，则限制偏移在 [容器宽-缩放宽, 0] 之间，否则居中
+                if (scaledW > containerWidth) {
+                    dragOffsetX = Math.min(0, Math.max(containerWidth - scaledW, dragOffsetX));
                 } else {
-                    dragOffsetX = (cw - scaledW) / 2;
+                    dragOffsetX = (containerWidth - scaledW) / 2;
                 }
                 // 限制Y方向
-                if (scaledH > ch) {
-                    dragOffsetY = Math.min(0, Math.max(ch - scaledH, dragOffsetY));
+                if (scaledH > containerHeight) {
+                    dragOffsetY = Math.min(0, Math.max(containerHeight - scaledH, dragOffsetY));
                 } else {
-                    dragOffsetY = (ch - scaledH) / 2;
+                    dragOffsetY = (containerHeight - scaledH) / 2;
                 }
             }
 
-            function updateTransform() {
+            function applyTransform() {
                 if (!compareViewEl) return;
-                applyBoundary();
                 compareViewEl.style.transform = `translate(${dragOffsetX}px, ${dragOffsetY}px) scale(${currentScale})`;
             }
 
             function setScale(scale) {
                 currentScale = scale;
-                updateTransform();
+                applyBoundary();
+                applyTransform();
             }
 
             function zoomToNextLevel() {
@@ -594,6 +609,7 @@
                 }
             }
 
+            // 拖拽图片（单指）
             let isDraggingImage = false, dragStartX = 0, dragStartY = 0, startOffsetX = 0, startOffsetY = 0;
             function onDragStart(e) {
                 if (!compareViewEl) return;
@@ -613,13 +629,15 @@
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 dragOffsetX = startOffsetX + (clientX - dragStartX);
                 dragOffsetY = startOffsetY + (clientY - dragStartY);
-                updateTransform();
+                applyBoundary();
+                applyTransform();
             }
             function onDragEnd() {
                 isDraggingImage = false;
                 document.body.style.userSelect = '';
             }
 
+            // 双指缩放
             let pinchStartDist = 0, pinchStartScale = 1;
             function getTouchDistance(touches) {
                 const dx = touches[0].clientX - touches[1].clientX;
@@ -645,7 +663,8 @@
                         let newScale = pinchStartScale * (dist / pinchStartDist);
                         newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale*10)/10));
                         currentScale = newScale;
-                        updateTransform();
+                        applyBoundary();
+                        applyTransform();
                     }
                 } else if (e.touches.length === 1 && isDraggingImage) {
                     onDragMove(e);
@@ -656,6 +675,7 @@
                 if (e.touches.length === 0) onDragEnd();
             }
 
+            // 滚轮缩放（在预览容器上）
             stickyPreview.addEventListener('wheel', (e) => {
                 if (!compareViewEl || !previewContainer.contains(e.target)) return;
                 e.preventDefault();
@@ -664,6 +684,7 @@
                 setScale(newScale);
             }, { passive: false });
 
+            // 鼠标拖拽
             previewContainer.addEventListener('mousedown', (e) => {
                 if (!compareViewEl) return;
                 if (e.target.closest('#compareSliderLine')) return;
@@ -674,6 +695,7 @@
             });
             document.addEventListener('mouseup', onDragEnd);
 
+            // 触摸事件（确保 passive: false 以阻止默认滚动）
             previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
             previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
             previewContainer.addEventListener('touchend', handleTouchEnd);
@@ -682,7 +704,7 @@
             zoomResetBtn.addEventListener('click', () => { dragOffsetX = dragOffsetY = 0; setScale(1); });
             zoomInBtn.addEventListener('click', zoomToNextLevel);
 
-            // 图像处理核心函数
+            // 图像处理核心函数（保持不变）
             function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
             function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
             function canvasToBlob(canvas) { return new Promise(r=>canvas.toBlob(r,'image/png',0.95)); }
