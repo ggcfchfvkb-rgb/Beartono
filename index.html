@@ -151,6 +151,7 @@
             font-weight: bold; box-shadow: 0 4px 16px rgba(0,0,0,0.5); pointer-events: none;
         }
 
+        /* 固定在预览框底角的气泡，不随图片缩放移动 */
         .corner-label {
             position: absolute; z-index: 30; padding: 3px 10px; border-radius: 12px;
             font-size: 0.7rem; font-weight: 600; white-space: nowrap;
@@ -184,7 +185,7 @@
 
         .action-buttons-row {
             display: flex; flex-wrap: wrap; gap: 8px;
-            justify-content: center; /* 按钮居中 */
+            justify-content: center;
         }
         .upload-file-row { display: flex; gap: 12px; align-items: stretch; }
         .upload-box { flex: 3; display: flex; align-items: stretch; }
@@ -264,6 +265,7 @@
                 </div>
             </div>
             <div class="preview-container" id="previewContainer">
+                <!-- 内容由JS动态填充，气泡固定于此容器内，不随图片变换 -->
             </div>
         </div>
 
@@ -570,6 +572,7 @@
                 }
             }
 
+            // 单指拖拽图片
             let isDraggingImage = false, dragStartX = 0, dragStartY = 0, startOffsetX = 0, startOffsetY = 0;
             function onDragStart(e) {
                 if (!compareViewEl) return;
@@ -596,7 +599,8 @@
                 document.body.style.userSelect = '';
             }
 
-            let pinchStartDist = 0, pinchStartScale = 1, pinchStartOffsetX = 0, pinchStartOffsetY = 0;
+            // 双指缩放
+            let pinchStartDist = 0, pinchStartScale = 1;
             function getTouchDistance(touches) {
                 const dx = touches[0].clientX - touches[1].clientX;
                 const dy = touches[0].clientY - touches[1].clientY;
@@ -608,8 +612,6 @@
                     e.preventDefault();
                     pinchStartDist = getTouchDistance(e.touches);
                     pinchStartScale = currentScale;
-                    pinchStartOffsetX = dragOffsetX;
-                    pinchStartOffsetY = dragOffsetY;
                 } else if (e.touches.length === 1) {
                     onDragStart(e);
                 }
@@ -634,6 +636,7 @@
                 if (e.touches.length === 0) onDragEnd();
             }
 
+            // 鼠标滚轮缩放
             stickyPreview.addEventListener('wheel', (e) => {
                 if (!compareViewEl || !previewContainer.contains(e.target)) return;
                 e.preventDefault();
@@ -642,6 +645,7 @@
                 setScale(newScale);
             }, { passive: false });
 
+            // 鼠标拖拽
             previewContainer.addEventListener('mousedown', (e) => {
                 if (!compareViewEl) return;
                 if (e.target.closest('#compareSliderLine')) return;
@@ -652,6 +656,7 @@
             });
             document.addEventListener('mouseup', onDragEnd);
 
+            // 触摸事件
             previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
             previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
             previewContainer.addEventListener('touchend', handleTouchEnd);
@@ -660,7 +665,7 @@
             zoomResetBtn.addEventListener('click', () => { dragOffsetX = dragOffsetY = 0; setScale(1); });
             zoomInBtn.addEventListener('click', zoomToNextLevel);
 
-            // 图像处理核心
+            // 图像处理核心函数（保持不变）
             function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
             function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
             function canvasToBlob(canvas) { return new Promise(r=>canvas.toBlob(r,'image/png',0.95)); }
