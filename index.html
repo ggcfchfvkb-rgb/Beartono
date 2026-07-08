@@ -136,9 +136,10 @@
             max-width: 100%; max-height: 100%; object-fit: contain;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
+        /* 中间线独立于图片容器 */
         .compare-slider-line {
             position: absolute; top: 0; bottom: 0; width: 5px; background: #ffffff;
-            cursor: col-resize; z-index: 20; box-shadow: 0 0 14px rgba(0,0,0,0.6); touch-action: none;
+            cursor: col-resize; z-index: 25; box-shadow: 0 0 14px rgba(0,0,0,0.6); touch-action: none;
         }
         .compare-slider-line::before {
             content: ''; position: absolute; left: -18px; right: -18px; top: 0; bottom: 0;
@@ -151,7 +152,6 @@
             font-weight: bold; box-shadow: 0 4px 16px rgba(0,0,0,0.5); pointer-events: none;
         }
 
-        /* 固定在预览框底角的气泡，不随图片缩放移动 */
         .corner-label {
             position: absolute; z-index: 30; padding: 3px 10px; border-radius: 12px;
             font-size: 0.7rem; font-weight: 600; white-space: nowrap;
@@ -265,7 +265,7 @@
                 </div>
             </div>
             <div class="preview-container" id="previewContainer">
-                <!-- 内容由JS动态填充，气泡固定于此容器内，不随图片变换 -->
+                <!-- 动态填充 -->
             </div>
         </div>
 
@@ -521,8 +521,8 @@
                         <div class="after-layer" id="afterLayer" style="clip-path:inset(0 50% 0 0);">
                             <img src="${originalDataURL}" alt="原始">
                         </div>
-                        <div class="compare-slider-line" id="compareSliderLine" style="left:50%;"></div>
                     </div>
+                    <div class="compare-slider-line" id="compareSliderLine" style="left:50%;"></div>
                     <div class="corner-label" style="bottom:10px; left:10px;">📷 原始</div>
                     <div class="corner-label after" style="bottom:10px; right:10px;">✨ 增强后</div>`;
                 compareViewEl = document.getElementById('compareView');
@@ -536,12 +536,12 @@
                 if(!sliderLineEl || !afterLayerEl || !compareViewEl) return;
                 let dragging = false;
                 function updateSlider(clientX) {
-                    const rect = compareViewEl.getBoundingClientRect();
+                    const rect = previewContainer.getBoundingClientRect();
                     let x = clientX - rect.left;
-                    x = Math.max(10, Math.min(rect.width-10, x));
-                    const pct = (x/rect.width)*100;
-                    sliderLineEl.style.left = pct+'%';
-                    afterLayerEl.style.clipPath = `inset(0 ${100-pct}% 0 0)`;
+                    x = Math.max(0, Math.min(rect.width, x));
+                    const pct = (x / rect.width) * 100;
+                    sliderLineEl.style.left = pct + '%';
+                    afterLayerEl.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
                 }
                 sliderLineEl.addEventListener('mousedown', (e)=>{ e.preventDefault(); dragging=true; document.body.style.userSelect='none'; });
                 document.addEventListener('mousemove', (e)=>{ if(!dragging) return; updateSlider(e.clientX); });
@@ -551,8 +551,30 @@
                 document.addEventListener('touchend', ()=>{ dragging=false; document.body.style.userSelect=''; });
             }
 
+            function applyBoundary() {
+                if (!compareViewEl) return;
+                const cw = previewContainer.clientWidth;
+                const ch = previewContainer.clientHeight;
+                const scaledW = cw * currentScale;
+                const scaledH = ch * currentScale;
+
+                // 限制X方向
+                if (scaledW > cw) {
+                    dragOffsetX = Math.min(0, Math.max(cw - scaledW, dragOffsetX));
+                } else {
+                    dragOffsetX = (cw - scaledW) / 2;
+                }
+                // 限制Y方向
+                if (scaledH > ch) {
+                    dragOffsetY = Math.min(0, Math.max(ch - scaledH, dragOffsetY));
+                } else {
+                    dragOffsetY = (ch - scaledH) / 2;
+                }
+            }
+
             function updateTransform() {
                 if (!compareViewEl) return;
+                applyBoundary();
                 compareViewEl.style.transform = `translate(${dragOffsetX}px, ${dragOffsetY}px) scale(${currentScale})`;
             }
 
@@ -572,7 +594,6 @@
                 }
             }
 
-            // 单指拖拽图片
             let isDraggingImage = false, dragStartX = 0, dragStartY = 0, startOffsetX = 0, startOffsetY = 0;
             function onDragStart(e) {
                 if (!compareViewEl) return;
@@ -599,7 +620,6 @@
                 document.body.style.userSelect = '';
             }
 
-            // 双指缩放
             let pinchStartDist = 0, pinchStartScale = 1;
             function getTouchDistance(touches) {
                 const dx = touches[0].clientX - touches[1].clientX;
@@ -636,7 +656,6 @@
                 if (e.touches.length === 0) onDragEnd();
             }
 
-            // 鼠标滚轮缩放
             stickyPreview.addEventListener('wheel', (e) => {
                 if (!compareViewEl || !previewContainer.contains(e.target)) return;
                 e.preventDefault();
@@ -645,7 +664,6 @@
                 setScale(newScale);
             }, { passive: false });
 
-            // 鼠标拖拽
             previewContainer.addEventListener('mousedown', (e) => {
                 if (!compareViewEl) return;
                 if (e.target.closest('#compareSliderLine')) return;
@@ -656,7 +674,6 @@
             });
             document.addEventListener('mouseup', onDragEnd);
 
-            // 触摸事件
             previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
             previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
             previewContainer.addEventListener('touchend', handleTouchEnd);
@@ -665,7 +682,7 @@
             zoomResetBtn.addEventListener('click', () => { dragOffsetX = dragOffsetY = 0; setScale(1); });
             zoomInBtn.addEventListener('click', zoomToNextLevel);
 
-            // 图像处理核心函数（保持不变）
+            // 图像处理核心函数
             function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
             function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
             function canvasToBlob(canvas) { return new Promise(r=>canvas.toBlob(r,'image/png',0.95)); }
