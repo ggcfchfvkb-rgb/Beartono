@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>熊啊熊啊熊 · 图片画质增强</title>
+    <title>熊啊熊啊熊 · 图片/视频画质增强 + 水印</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
             --bg: #f0f2f5;
-            --bg-gradient: radial-gradient(ellipse at 30% 20%, rgba(168, 175, 255, 0.2) 0%, transparent 60%),
-                radial-gradient(ellipse at 70% 60%, rgba(122, 210, 220, 0.15) 0%, transparent 60%);
-            --surface: rgba(255, 255, 255, 0.75);
-            --surface2: rgba(255, 255, 255, 0.55);
+            --bg-gradient: radial-gradient(ellipse at 30% 20%, rgba(168,175,255,0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(122,210,220,0.15) 0%, transparent 60%);
+            --surface: rgba(255,255,255,0.75);
+            --surface2: rgba(255,255,255,0.55);
             --accent: #6c5ce7;
             --accent2: #5a4fcf;
             --accent3: #00b894;
@@ -134,6 +134,7 @@
         @keyframes slideIn { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
         .processing-indicator { animation:pulse 1.2s infinite; color:var(--accent3); }
         @keyframes pulse { 0%,100% { opacity:0.6; } 50% { opacity:1; } }
+        .watermark-preview { width:40px; height:40px; border-radius:4px; object-fit:contain; border:1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -157,31 +158,75 @@
 
         <div class="control-area">
             <div class="card" id="leftPanel">
-                <div class="action-buttons-row">
+                <div class="action-buttons-row" id="imageActions">
                     <button class="btn btn-primary" id="btnProcessOne" disabled>✨ 增强当前图片</button>
                     <button class="btn btn-success" id="btnProcessAll" disabled>🚀 批量处理全部</button>
                     <button class="btn btn-secondary" id="btnDownloadOne" disabled>💾 下载当前结果</button>
                     <button class="btn btn-secondary" id="btnDownloadAll" disabled>📦 打包下载全部</button>
+                    <button class="btn btn-secondary" id="btnWatermarkOne" disabled>💧 当前加水印</button>
+                    <button class="btn btn-secondary" id="btnWatermarkAll" disabled>💧 批量加水印</button>
                 </div>
-                <div class="upload-file-row">
-                    <div class="upload-box">
-                        <div class="upload-zone" id="uploadZone">
-                            <span class="upload-icon">📷</span>
-                            <div class="upload-text">拖拽或点击上传</div>
-                            <div class="upload-hint">JPG/PNG/WebP/BMP</div>
-                            <input type="file" id="fileInput" accept="image/*" multiple>
+
+                <div id="imageUploadSection">
+                    <div class="upload-file-row">
+                        <div class="upload-box">
+                            <div class="upload-zone" id="uploadZone">
+                                <span class="upload-icon">📷</span>
+                                <div class="upload-text">拖拽或点击上传</div>
+                                <div class="upload-hint">JPG/PNG/WebP/BMP</div>
+                                <input type="file" id="fileInput" accept="image/*" multiple>
+                            </div>
+                        </div>
+                        <div class="file-list-box">
+                            <div class="card-title" style="margin-bottom:6px;">
+                                <span class="dot"></span>📋 列表 (<span id="fileCount">0</span>)
+                                <button class="btn btn-secondary" id="btnListClear" style="margin-left:auto; padding:4px 12px; font-size:0.7rem; border-radius:15px;">🗑️ 清空</button>
+                            </div>
+                            <div class="file-list" id="fileList">
+                                <div style="text-align:center;color:var(--text2);padding:20px;font-size:0.82rem;">还没有图片 📷</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="file-list-box">
-                        <div class="card-title" style="margin-bottom:6px;">
-                            <span class="dot"></span>📋 列表 (<span id="fileCount">0</span>)
-                            <button class="btn btn-secondary" id="btnListClear" style="margin-left:auto; padding:4px 12px; font-size:0.7rem; border-radius:15px;">🗑️ 清空</button>
-                        </div>
-                        <div class="file-list" id="fileList">
-                            <div style="text-align:center;color:var(--text2);padding:20px;font-size:0.82rem;">还没有图片 📷</div>
-                        </div>
-                    </div>
                 </div>
+
+                <div id="videoSection" style="display:none;">
+                    <div class="card-title"><span class="dot"></span>🎬 上传视频</div>
+                    <div class="upload-zone" id="videoUploadZone">
+                        <span class="upload-icon">🎥</span>
+                        <div class="upload-text">点击或拖拽上传视频</div>
+                        <div class="upload-hint">MP4 / WebM / MOV</div>
+                        <input type="file" id="videoInput" accept="video/*">
+                    </div>
+                    <div id="videoInfo" style="font-size:0.8rem; color:var(--text2);"></div>
+                    <button class="btn btn-success" id="btnProcessVideo" disabled>🚀 开始增强视频</button>
+                    <div class="progress-bar-wrap" id="videoProgressWrap" style="display:none;">
+                        <div class="progress-bar-fill" id="videoProgressFill"></div>
+                    </div>
+                    <div class="progress-text" id="videoProgressText"></div>
+                </div>
+
+                <div class="card-title"><span class="dot"></span>💧 水印设置</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="file" id="watermarkInput" accept="image/png" style="display:none;">
+                    <button class="btn btn-secondary" id="btnUploadWatermark" style="font-size:0.75rem;">📁 上传水印</button>
+                    <img id="watermarkPreviewImg" class="watermark-preview" style="display:none;" alt="水印预览">
+                    <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; margin-left:auto;">
+                        <input type="checkbox" id="watermarkEnabled"> 启用水印
+                    </label>
+                </div>
+                <div class="control-group" style="margin-top:4px;">
+                    <label>水印大小 <span class="val" id="watermarkSizeVal">30%</span></label>
+                    <input type="range" class="slider-input" id="watermarkSizeSlider" min="5" max="80" value="30" step="1">
+                </div>
+                <div class="control-group">
+                    <label>边距 <span class="val" id="watermarkMarginVal">10px</span></label>
+                    <input type="range" class="slider-input" id="watermarkMarginSlider" min="0" max="80" value="10" step="1">
+                </div>
+
+                <div style="margin-top:8px;">
+                    <button class="btn btn-secondary" id="btnSwitchMode" style="width:100%;">🎬 切换到视频增强</button>
+                </div>
+
                 <div class="card-title"><span class="dot"></span>⚙️ 增强参数</div>
                 <div class="preset-btns" id="presetBtns">
                     <button class="preset-btn active-preset" data-preset="mild">🌿 轻度增强（推荐）</button>
@@ -231,6 +276,7 @@
 
     <script>
         (function() {
+            // 图片相关 DOM
             const themeToggle = document.getElementById('themeToggle');
             const previewContainer = document.getElementById('previewContainer');
             const zoomOutBtn = document.getElementById('zoomOutBtn');
@@ -244,6 +290,8 @@
             const btnProcessAll = document.getElementById('btnProcessAll');
             const btnDownloadOne = document.getElementById('btnDownloadOne');
             const btnDownloadAll = document.getElementById('btnDownloadAll');
+            const btnWatermarkOne = document.getElementById('btnWatermarkOne');
+            const btnWatermarkAll = document.getElementById('btnWatermarkAll');
             const btnListClear = document.getElementById('btnListClear');
             const sharpenSlider = document.getElementById('sharpenSlider');
             const denoiseSelect = document.getElementById('denoiseSelect');
@@ -260,19 +308,40 @@
             const progressText = document.getElementById('progressText');
             const presetBtns = document.getElementById('presetBtns');
             const stickyPreview = document.getElementById('stickyPreview');
+            const imageActions = document.getElementById('imageActions');
+            const imageUploadSection = document.getElementById('imageUploadSection');
+            const videoSection = document.getElementById('videoSection');
+            const btnSwitchMode = document.getElementById('btnSwitchMode');
+            const videoInput = document.getElementById('videoInput');
+            const videoUploadZone = document.getElementById('videoUploadZone');
+            const videoInfo = document.getElementById('videoInfo');
+            const btnProcessVideo = document.getElementById('btnProcessVideo');
+            const videoProgressWrap = document.getElementById('videoProgressWrap');
+            const videoProgressFill = document.getElementById('videoProgressFill');
+            const videoProgressText = document.getElementById('videoProgressText');
+
+            const watermarkInput = document.getElementById('watermarkInput');
+            const btnUploadWatermark = document.getElementById('btnUploadWatermark');
+            const watermarkPreviewImg = document.getElementById('watermarkPreviewImg');
+            const watermarkEnabled = document.getElementById('watermarkEnabled');
+            const watermarkSizeSlider = document.getElementById('watermarkSizeSlider');
+            const watermarkMarginSlider = document.getElementById('watermarkMarginSlider');
+            const watermarkSizeVal = document.getElementById('watermarkSizeVal');
+            const watermarkMarginVal = document.getElementById('watermarkMarginVal');
+
+            let watermarkImage = null;
+            let isVideoMode = false;
+            let videoFile = null;
+            let isProcessingVideo = false;
 
             let files = [], activeFileId = null, isProcessing = false, currentProcessedDataURL = null;
             let compareViewEl = null, afterLayerEl = null, sliderLineEl = null;
             let currentScale = 1, dragOffsetX = 0, dragOffsetY = 0;
             const MIN_SCALE = 0.5, MAX_SCALE = 4, ZOOM_LEVELS = [0.5, 1, 2, 3, 4];
             let containerWidth = 0, containerHeight = 0;
-
             let sliderDocHandlers = {};
 
-            function updateContainerSize() {
-                containerWidth = previewContainer.clientWidth;
-                containerHeight = previewContainer.clientHeight;
-            }
+            function updateContainerSize() { containerWidth = previewContainer.clientWidth; containerHeight = previewContainer.clientHeight; }
             window.addEventListener('resize', updateContainerSize);
 
             const presets = {
@@ -295,23 +364,294 @@
             function showToast(msg, type='info') {
                 const c = document.getElementById('toastContainer');
                 const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
-                c.appendChild(t);
-                setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; setTimeout(()=>t.remove(),500); },2500);
+                c.appendChild(t); setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; setTimeout(()=>t.remove(),500); },2500);
             }
 
-            function generateId() { return 'f_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+            function switchMode(toVideo) {
+                isVideoMode = toVideo;
+                if (toVideo) {
+                    imageActions.style.display = 'none';
+                    imageUploadSection.style.display = 'none';
+                    videoSection.style.display = 'block';
+                    btnSwitchMode.textContent = '🖼️ 切换到图片增强';
+                    showPlaceholder();
+                    files = []; activeFileId = null;
+                    renderFileList(); updateButtons();
+                } else {
+                    imageActions.style.display = 'flex';
+                    imageUploadSection.style.display = 'block';
+                    videoSection.style.display = 'none';
+                    btnSwitchMode.textContent = '🎬 切换到视频增强';
+                    videoFile = null; videoInfo.textContent = ''; btnProcessVideo.disabled = true;
+                    showPlaceholder();
+                }
+            }
+            btnSwitchMode.addEventListener('click', () => switchMode(!isVideoMode));
 
+            // 水印事件
+            btnUploadWatermark.addEventListener('click', () => watermarkInput.click());
+            watermarkInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => { watermarkImage = img; watermarkPreviewImg.src = ev.target.result; watermarkPreviewImg.style.display = 'block'; showToast('水印已加载', 'success'); };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            watermarkSizeSlider.addEventListener('input', () => { watermarkSizeVal.textContent = watermarkSizeSlider.value + '%'; });
+            watermarkMarginSlider.addEventListener('input', () => { watermarkMarginVal.textContent = watermarkMarginSlider.value + 'px'; });
+
+            // 视频上传
+            videoUploadZone.addEventListener('click', () => videoInput.click());
+            videoInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    videoFile = e.target.files[0];
+                    videoInfo.textContent = `视频: ${videoFile.name} (${(videoFile.size/1024/1024).toFixed(1)} MB)`;
+                    btnProcessVideo.disabled = false;
+                }
+            });
+            videoUploadZone.addEventListener('dragover', (e) => { e.preventDefault(); videoUploadZone.classList.add('drag-over'); });
+            videoUploadZone.addEventListener('dragleave', () => videoUploadZone.classList.remove('drag-over'));
+            videoUploadZone.addEventListener('drop', (e) => {
+                e.preventDefault(); videoUploadZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    videoFile = e.dataTransfer.files[0];
+                    videoInfo.textContent = `视频: ${videoFile.name} (${(videoFile.size/1024/1024).toFixed(1)} MB)`;
+                    btnProcessVideo.disabled = false;
+                }
+            });
+
+            btnProcessVideo.addEventListener('click', async () => {
+                if (!videoFile || isProcessingVideo) return;
+                isProcessingVideo = true; btnProcessVideo.disabled = true;
+                videoProgressWrap.style.display = 'block';
+                videoProgressFill.style.width = '0%'; videoProgressText.textContent = '准备处理...';
+                try {
+                    const videoUrl = URL.createObjectURL(videoFile);
+                    const video = document.createElement('video');
+                    video.src = videoUrl; video.muted = true; video.playsInline = true;
+                    await new Promise((resolve, reject) => { video.addEventListener('loadedmetadata', resolve); video.addEventListener('error', reject); });
+                    const width = video.videoWidth, height = video.videoHeight;
+                    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    const stream = canvas.captureStream(30);
+                    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                    const chunks = [];
+                    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+                    recorder.start();
+
+                    const params = { sharpen: sharpenSlider.value, denoise: denoiseSelect.value, upscale: upscaleSelect.value, contrast: contrastSlider.value, brightness: brightnessSlider.value };
+                    const enableWatermark = watermarkEnabled.checked && watermarkImage;
+                    const markSize = parseInt(watermarkSizeSlider.value) / 100;
+                    const markMargin = parseInt(watermarkMarginSlider.value);
+                    const fps = 24; const frameInterval = 1 / fps;
+                    let currentTime = 0; const duration = video.duration;
+                    while (currentTime < duration && isProcessingVideo) {
+                        video.currentTime = currentTime;
+                        await new Promise((resolve) => { const onSeeked = () => { video.removeEventListener('seeked', onSeeked); resolve(); }; video.addEventListener('seeked', onSeeked); });
+                        ctx.drawImage(video, 0, 0, width, height);
+                        let enhanced = await enhanceImage(canvas.toDataURL('image/png'), params);
+                        if (enableWatermark) enhanced = await addWatermark(enhanced, markSize, markMargin);
+                        const img = new Image();
+                        await new Promise((resolve) => { img.onload = () => { ctx.clearRect(0, 0, width, height); ctx.drawImage(img, 0, 0); resolve(); }; img.src = enhanced; });
+                        const progress = Math.min(100, Math.round((currentTime / duration) * 100));
+                        videoProgressFill.style.width = progress + '%'; videoProgressText.textContent = `处理中 ${progress}%`;
+                        currentTime += frameInterval;
+                    }
+                    recorder.stop();
+                    await new Promise((resolve) => recorder.addEventListener('stop', resolve));
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'enhanced_video.webm';
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    showToast('视频增强完成！', 'success');
+                } catch (err) { showToast('视频处理失败: ' + err.message, 'error'); }
+                finally { isProcessingVideo = false; btnProcessVideo.disabled = false; videoProgressWrap.style.display = 'none'; }
+            });
+
+            // 图像处理函数
+            function loadImage(src) { return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = src; }); }
+            function imageToCanvas(img) { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); return c; }
+            function boxBlurH(d, r) { const { data, width, height } = d; const o = new Uint8ClampedArray(data.length); for (let y = 0; y < height; y++) { for (let x = 0; x < width; x++) { let rs = 0, gs = 0, bs = 0, c = 0; const x0 = Math.max(0, x - r), x1 = Math.min(width - 1, x + r); for (let xi = x0; xi <= x1; xi++) { const i = (y * width + xi) * 4; rs += data[i]; gs += data[i + 1]; bs += data[i + 2]; c++; } const oi = (y * width + x) * 4; o[oi] = Math.round(rs / c); o[oi + 1] = Math.round(gs / c); o[oi + 2] = Math.round(bs / c); o[oi + 3] = data[oi + 3]; } } return new ImageData(o, width, height); }
+            function boxBlurV(d, r) { const { data, width, height } = d; const o = new Uint8ClampedArray(data.length); for (let y = 0; y < height; y++) { for (let x = 0; x < width; x++) { let rs = 0, gs = 0, bs = 0, c = 0; const y0 = Math.max(0, y - r), y1 = Math.min(height - 1, y + r); for (let yi = y0; yi <= y1; yi++) { const i = (yi * width + x) * 4; rs += data[i]; gs += data[i + 1]; bs += data[i + 2]; c++; } const oi = (y * width + x) * 4; o[oi] = Math.round(rs / c); o[oi + 1] = Math.round(gs / c); o[oi + 2] = Math.round(bs / c); o[oi + 3] = data[oi + 3]; } } return new ImageData(o, width, height); }
+            function gaussianBlur(canvas, sigma) { const ctx = canvas.getContext('2d'); const r = Math.max(1, Math.round(sigma * 1.5)); let idata = ctx.getImageData(0, 0, canvas.width, canvas.height); for (let i = 0; i < 3; i++) { idata = boxBlurH(idata, r); idata = boxBlurV(idata, r); } const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; c.getContext('2d').putImageData(idata, 0, 0); return c; }
+            function unsharpMask(canvas, amount) { const blurred = gaussianBlur(canvas, 2.0); const ctx = canvas.getContext('2d'); const orig = ctx.getImageData(0, 0, canvas.width, canvas.height); const blurCtx = blurred.getContext('2d'); const blur = blurCtx.getImageData(0, 0, canvas.width, canvas.height); const out = new Uint8ClampedArray(orig.data.length); const amt = amount / 100; for (let i = 0; i < orig.data.length; i += 4) { for (let c = 0; c < 3; c++) { let v = orig.data[i + c] + (orig.data[i + c] - blur.data[i + c]) * amt; out[i + c] = Math.max(0, Math.min(255, Math.round(v))); } out[i + 3] = orig.data[i + 3]; } const rc = document.createElement('canvas'); rc.width = canvas.width; rc.height = canvas.height; rc.getContext('2d').putImageData(new ImageData(out, canvas.width, canvas.height), 0, 0); return rc; }
+            function medianFilter(canvas, size) { const ctx = canvas.getContext('2d'); const idata = ctx.getImageData(0, 0, canvas.width, canvas.height); const { data, width, height } = idata; const out = new Uint8ClampedArray(data.length); const half = Math.floor(size / 2); for (let y = 0; y < height; y++) { for (let x = 0; x < width; x++) { const rv = [], gv = [], bv = []; for (let dy = -half; dy <= half; dy++) { for (let dx = -half; dx <= half; dx++) { const nx = Math.min(width - 1, Math.max(0, x + dx)); const ny = Math.min(height - 1, Math.max(0, y + dy)); const i = (ny * width + nx) * 4; rv.push(data[i]); gv.push(data[i + 1]); bv.push(data[i + 2]); } } rv.sort((a, b) => a - b); gv.sort((a, b) => a - b); bv.sort((a, b) => a - b); const m = Math.floor(rv.length / 2); const o = (y * width + x) * 4; out[o] = rv[m]; out[o + 1] = gv[m]; out[o + 2] = bv[m]; out[o + 3] = data[o + 3]; } } const rc = document.createElement('canvas'); rc.width = width; rc.height = height; rc.getContext('2d').putImageData(new ImageData(out, width, height), 0, 0); return rc; }
+            function adjustContrastBrightness(canvas, contrastPercent, brightness) { const ctx = canvas.getContext('2d'); const idata = ctx.getImageData(0, 0, canvas.width, canvas.height); const factor = 1 + contrastPercent / 100; for (let i = 0; i < idata.data.length; i += 4) { for (let c = 0; c < 3; c++) { let v = (idata.data[i + c] - 128) * factor + 128 + brightness; idata.data[i + c] = Math.max(0, Math.min(255, Math.round(v))); } } const rc = document.createElement('canvas'); rc.width = canvas.width; rc.height = canvas.height; rc.getContext('2d').putImageData(idata, 0, 0); return rc; }
+            function upscaleImage(canvas, scale) { if (scale <= 1) return canvas; const tw = Math.round(canvas.width * scale), th = Math.round(canvas.height * scale); const steps = scale <= 1.5 ? 1 : scale <= 2 ? 2 : scale <= 3 ? 3 : 4; const stepScale = Math.pow(scale, 1 / steps); let current = canvas; for (let i = 0; i < steps; i++) { const sw = Math.round(current.width * stepScale), sh = Math.round(current.height * stepScale); const temp = document.createElement('canvas'); temp.width = sw; temp.height = sh; const tctx = temp.getContext('2d'); tctx.imageSmoothingEnabled = true; tctx.imageSmoothingQuality = 'high'; tctx.drawImage(current, 0, 0, sw, sh); current = temp; } const final = document.createElement('canvas'); final.width = tw; final.height = th; const fctx = final.getContext('2d'); fctx.imageSmoothingEnabled = true; fctx.imageSmoothingQuality = 'high'; fctx.drawImage(current, 0, 0, tw, th); return final; }
+
+            async function enhanceImage(dataURL, params) {
+                const img = await loadImage(dataURL);
+                let canvas = imageToCanvas(img);
+                if (params.denoise === '1') canvas = medianFilter(canvas, 3);
+                else if (params.denoise === '2') canvas = medianFilter(canvas, 5);
+                canvas = upscaleImage(canvas, parseFloat(params.upscale));
+                if (parseInt(params.sharpen) > 0) canvas = unsharpMask(canvas, parseInt(params.sharpen));
+                canvas = adjustContrastBrightness(canvas, parseInt(params.contrast), parseInt(params.brightness));
+                return canvas.toDataURL('image/png');
+            }
+
+            async function addWatermark(imageDataURL, sizePercent, marginPx) {
+                if (!watermarkImage) return imageDataURL;
+                const baseImg = await loadImage(imageDataURL);
+                const canvas = document.createElement('canvas');
+                canvas.width = baseImg.width; canvas.height = baseImg.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(baseImg, 0, 0);
+                const wmWidth = baseImg.width * sizePercent;
+                const wmHeight = (wmWidth / watermarkImage.width) * watermarkImage.height;
+                const x = baseImg.width - wmWidth - marginPx;
+                const y = baseImg.height - wmHeight - marginPx;
+                ctx.drawImage(watermarkImage, x, y, wmWidth, wmHeight);
+                return canvas.toDataURL('image/png');
+            }
+
+            async function enhanceAndWatermark(dataURL, params) {
+                let enhanced = await enhanceImage(dataURL, params);
+                if (watermarkEnabled.checked && watermarkImage) {
+                    enhanced = await addWatermark(enhanced, parseInt(watermarkSizeSlider.value)/100, parseInt(watermarkMarginSlider.value));
+                }
+                return enhanced;
+            }
+
+            async function processSingleFile(fileObj) {
+                const params = { sharpen: sharpenSlider.value, denoise: denoiseSelect.value, upscale: upscaleSelect.value, contrast: contrastSlider.value, brightness: brightnessSlider.value };
+                const resultDataURL = await enhanceAndWatermark(fileObj.originalDataURL, params);
+                fileObj.processedDataURL = resultDataURL;
+                fileObj.processedBlob = await (await fetch(resultDataURL)).blob();
+                return resultDataURL;
+            }
+
+            async function applyWatermarkOnly(dataURL) {
+                if (!watermarkImage) return dataURL;
+                return addWatermark(dataURL, parseInt(watermarkSizeSlider.value)/100, parseInt(watermarkMarginSlider.value));
+            }
+
+            // 图片按钮事件
+            btnProcessOne.addEventListener('click', async () => {
+                if (isProcessing || !activeFileId) return;
+                isProcessing = true; updateButtons();
+                const fileObj = files.find(f => f.id === activeFileId);
+                if (!fileObj) return;
+                setProgress(15, '增强中...');
+                try {
+                    const dataURL = await processSingleFile(fileObj);
+                    currentProcessedDataURL = dataURL;
+                    setProgress(100, '完成 ✨');
+                    showComparePreview(fileObj.originalDataURL, dataURL);
+                    renderFileList(); updateButtons();
+                    showToast('增强完成！', 'success');
+                } catch (e) { showToast('处理失败: ' + e.message, 'error'); }
+                finally { isProcessing = false; updateButtons(); setTimeout(() => showProgress(false), 1500); }
+            });
+
+            btnProcessAll.addEventListener('click', async () => {
+                if (isProcessing || files.length === 0) return;
+                isProcessing = true; updateButtons();
+                showProgress(true); const total = files.length;
+                for (let i = 0; i < total; i++) {
+                    setProgress(Math.round((i/total)*100), `处理中 ${i+1}/${total}`);
+                    await processSingleFile(files[i]);
+                    if (files[i].id === activeFileId) {
+                        currentProcessedDataURL = files[i].processedDataURL;
+                        showComparePreview(files[i].originalDataURL, files[i].processedDataURL);
+                    }
+                }
+                setProgress(100, `全部完成！共${total}张`);
+                renderFileList(); updateButtons();
+                showToast(`批量处理完成！`, 'success');
+                isProcessing = false; updateButtons();
+                setTimeout(() => showProgress(false), 2000);
+            });
+
+            btnWatermarkOne.addEventListener('click', async () => {
+                if (isProcessing || !activeFileId || !watermarkImage) return;
+                isProcessing = true; updateButtons();
+                const fileObj = files.find(f => f.id === activeFileId);
+                if (!fileObj) return;
+                setProgress(50, '添加水印...');
+                try {
+                    const dataURL = await applyWatermarkOnly(fileObj.originalDataURL);
+                    fileObj.processedDataURL = dataURL;
+                    fileObj.processedBlob = await (await fetch(dataURL)).blob();
+                    currentProcessedDataURL = dataURL;
+                    setProgress(100, '完成');
+                    showComparePreview(fileObj.originalDataURL, dataURL);
+                    renderFileList(); updateButtons();
+                    showToast('水印已添加', 'success');
+                } catch (e) { showToast('添加水印失败', 'error'); }
+                finally { isProcessing = false; updateButtons(); setTimeout(() => showProgress(false), 1500); }
+            });
+
+            btnWatermarkAll.addEventListener('click', async () => {
+                if (isProcessing || files.length === 0 || !watermarkImage) return;
+                isProcessing = true; updateButtons();
+                showProgress(true); const total = files.length;
+                for (let i = 0; i < total; i++) {
+                    setProgress(Math.round((i/total)*100), `加水印 ${i+1}/${total}`);
+                    const fileObj = files[i];
+                    const dataURL = await applyWatermarkOnly(fileObj.originalDataURL);
+                    fileObj.processedDataURL = dataURL;
+                    fileObj.processedBlob = await (await fetch(dataURL)).blob();
+                    if (fileObj.id === activeFileId) {
+                        currentProcessedDataURL = dataURL;
+                        showComparePreview(fileObj.originalDataURL, dataURL);
+                    }
+                }
+                setProgress(100, `全部加水印完成`);
+                renderFileList(); updateButtons();
+                showToast('批量添加水印完成！', 'success');
+                isProcessing = false; updateButtons();
+                setTimeout(() => showProgress(false), 2000);
+            });
+
+            btnDownloadOne.addEventListener('click', () => {
+                const f = files.find(f => f.id === activeFileId);
+                if (!f?.processedBlob) return showToast('请先增强', 'info');
+                triggerDownload(f.processedBlob, getOutputFilename(f.file.name));
+                showToast('下载开始', 'success');
+            });
+
+            btnDownloadAll.addEventListener('click', async () => {
+                const processed = files.filter(f => f.processedBlob);
+                if (processed.length === 0) return showToast('没有已处理的图片', 'info');
+                if (processed.length === 1) return triggerDownload(processed[0].processedBlob, getOutputFilename(processed[0].file.name));
+                const zip = new JSZip(); const nameMap = {};
+                processed.forEach(f => {
+                    let name = getOutputFilename(f.file.name);
+                    if (nameMap[name]) { const d = name.lastIndexOf('.'); name = name.substring(0, d) + '_' + nameMap[name] + name.substring(d); }
+                    nameMap[name] = (nameMap[name] || 0) + 1;
+                    zip.file(name, f.processedBlob);
+                });
+                const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+                triggerDownload(blob, `熊啊熊增强_${Date.now()}.zip`);
+                showToast(`打包下载 ${processed.length} 张`, 'success');
+            });
+
+            btnListClear.addEventListener('click', () => {
+                if (isProcessing) return;
+                files.forEach(f => { if (f.processedDataURL?.startsWith('blob:')) URL.revokeObjectURL(f.processedDataURL); });
+                files = []; activeFileId = null; currentProcessedDataURL = null;
+                renderFileList(); updateButtons(); showPlaceholder(); showProgress(false);
+                showToast('已清空', 'info');
+            });
+
+            // 图片管理核心
+            function generateId() { return 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
             function addFiles(newFiles) {
                 const valid = /\.(jpg|jpeg|png|webp|bmp|tiff?|gif)$/i; let added = 0;
                 Array.from(newFiles).forEach(file => {
                     if (!file.type.startsWith('image/') && !file.name.match(valid)) { showToast(`跳过非图片: ${file.name}`, 'error'); return; }
-                    if (file.size > 50*1024*1024) { showToast(`文件过大(>50MB): ${file.name}`, 'error'); return; }
+                    if (file.size > 50 * 1024 * 1024) { showToast(`文件过大(>50MB): ${file.name}`, 'error'); return; }
                     const id = generateId();
                     const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const dataURL = e.target.result; // 原始图片 Data URL，未压缩
+                    reader.onload = function (e) {
+                        const dataURL = e.target.result;
                         const img = new Image();
-                        img.onload = function() {
+                        img.onload = function () {
                             const thumb = createThumbnail(img, 80);
                             files.push({ id, file, originalDataURL: dataURL, thumbnailDataURL: thumb, width: img.width, height: img.height, processedBlob: null, processedDataURL: null });
                             if (files.length === 1) activeFileId = id;
@@ -322,22 +662,22 @@
                     };
                     reader.readAsDataURL(file); added++;
                 });
-                if (added>0) showToast(`成功添加 ${added} 张图片`, 'success');
+                if (added > 0) showToast(`成功添加 ${added} 张图片`, 'success');
             }
 
             function createThumbnail(img, maxSize) {
                 const canvas = document.createElement('canvas');
-                const ratio = Math.min(maxSize/img.width, maxSize/img.height, 1);
-                canvas.width = Math.round(img.width*ratio); canvas.height = Math.round(img.height*ratio);
+                const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+                canvas.width = Math.round(img.width * ratio); canvas.height = Math.round(img.height * ratio);
                 const ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = true;
-                ctx.drawImage(img,0,0,canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 return canvas.toDataURL('image/jpeg', 0.7);
             }
 
             function removeFile(id) {
                 const idx = files.findIndex(f => f.id === id);
-                if (idx>=0) { const f=files[idx]; if(f.processedDataURL?.startsWith('blob:')) URL.revokeObjectURL(f.processedDataURL); files.splice(idx,1); }
-                if (activeFileId === id) activeFileId = files.length>0 ? files[0].id : null;
+                if (idx >= 0) { const f = files[idx]; if (f.processedDataURL?.startsWith('blob:')) URL.revokeObjectURL(f.processedDataURL); files.splice(idx, 1); }
+                if (activeFileId === id) activeFileId = files.length > 0 ? files[0].id : null;
                 currentProcessedDataURL = null; renderFileList(); updateButtons();
                 if (activeFileId) {
                     const af = files.find(f => f.id === activeFileId);
@@ -351,8 +691,8 @@
                 if (files.length === 0) fileListEl.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;">还没有图片 📷</div>';
                 else files.forEach(f => {
                     const item = document.createElement('div');
-                    item.className = 'file-item' + (f.id===activeFileId?' active':'');
-                    item.innerHTML = `<img class="thumb" src="${f.thumbnailDataURL}"><div class="info"><div class="name" title="${escapeHtml(f.file.name)}">${escapeHtml(f.file.name)}</div><div class="meta">${f.width}×${f.height} · ${formatSize(f.file.size)}${f.processedBlob?' ✅':''}</div></div><button class="remove-btn" data-id="${f.id}">✕</button>`;
+                    item.className = 'file-item' + (f.id === activeFileId ? ' active' : '');
+                    item.innerHTML = `<img class="thumb" src="${f.thumbnailDataURL}"><div class="info"><div class="name" title="${escapeHtml(f.file.name)}">${escapeHtml(f.file.name)}</div><div class="meta">${f.width}×${f.height} · ${formatSize(f.file.size)}${f.processedBlob ? ' ✅' : ''}</div></div><button class="remove-btn" data-id="${f.id}">✕</button>`;
                     item.addEventListener('click', (e) => {
                         if (e.target.closest('.remove-btn')) return;
                         activeFileId = f.id; renderFileList(); updateButtons();
@@ -364,15 +704,17 @@
                 });
             }
 
-            function escapeHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-            function formatSize(b) { return b<1024?b+' B':b<1024*1024?(b/1024).toFixed(1)+' KB':(b/(1024*1024)).toFixed(2)+' MB'; }
+            function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+            function formatSize(b) { return b < 1024 ? b + ' B' : b < 1024 * 1024 ? (b / 1024).toFixed(1) + ' KB' : (b / (1024 * 1024)).toFixed(2) + ' MB'; }
 
             function updateButtons() {
-                const af = activeFileId ? files.find(f=>f.id===activeFileId) : null;
+                const af = activeFileId ? files.find(f => f.id === activeFileId) : null;
                 btnProcessOne.disabled = !activeFileId || isProcessing;
-                btnProcessAll.disabled = files.length===0 || isProcessing;
+                btnProcessAll.disabled = files.length === 0 || isProcessing;
                 btnDownloadOne.disabled = !af?.processedBlob;
-                btnDownloadAll.disabled = !files.some(f=>f.processedBlob);
+                btnDownloadAll.disabled = !files.some(f => f.processedBlob);
+                btnWatermarkOne.disabled = !activeFileId || isProcessing || !watermarkImage;
+                btnWatermarkAll.disabled = files.length === 0 || isProcessing || !watermarkImage;
             }
 
             function showPlaceholder() {
@@ -384,7 +726,7 @@
             }
 
             function showOriginalPreview() {
-                const af = files.find(f=>f.id===activeFileId); if(!af) { showPlaceholder(); return; }
+                const af = files.find(f => f.id === activeFileId); if (!af) { showPlaceholder(); return; }
                 updateContainerSize();
                 currentScale = 1; dragOffsetX = dragOffsetY = 0;
                 previewContainer.innerHTML = `
@@ -431,7 +773,7 @@
             }
 
             function setupCompareSlider() {
-                if(!sliderLineEl || !afterLayerEl) return;
+                if (!sliderLineEl || !afterLayerEl) return;
                 removeSliderDocListeners();
                 let dragging = false;
                 function updateSlider(clientX) {
@@ -442,9 +784,9 @@
                     sliderLineEl.style.left = pct + '%';
                     afterLayerEl.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
                 }
-                function onMouseMove(e) { if(!dragging) return; updateSlider(e.clientX); }
+                function onMouseMove(e) { if (!dragging) return; updateSlider(e.clientX); }
                 function onMouseUp() { dragging = false; document.body.style.userSelect = ''; }
-                function onTouchMove(e) { if(!dragging) return; updateSlider(e.touches[0].clientX); }
+                function onTouchMove(e) { if (!dragging) return; updateSlider(e.touches[0].clientX); }
                 function onTouchEnd() { dragging = false; document.body.style.userSelect = ''; }
 
                 sliderLineEl.addEventListener('mousedown', (e) => { e.preventDefault(); dragging = true; document.body.style.userSelect = 'none'; });
@@ -474,22 +816,9 @@
                 compareViewEl.style.transform = `translate(${dragOffsetX}px, ${dragOffsetY}px) scale(${currentScale})`;
             }
 
-            function setScale(scale) {
-                currentScale = scale;
-                applyBoundary();
-                applyTransform();
-            }
-
-            function zoomToNextLevel() {
-                for (let i=0; i<ZOOM_LEVELS.length; i++) {
-                    if (currentScale < ZOOM_LEVELS[i] - 0.01) { setScale(ZOOM_LEVELS[i]); return; }
-                }
-            }
-            function zoomToPrevLevel() {
-                for (let i=ZOOM_LEVELS.length-1; i>=0; i--) {
-                    if (currentScale > ZOOM_LEVELS[i] + 0.01) { setScale(ZOOM_LEVELS[i]); return; }
-                }
-            }
+            function setScale(scale) { currentScale = scale; applyBoundary(); applyTransform(); }
+            function zoomToNextLevel() { for (let i = 0; i < ZOOM_LEVELS.length; i++) { if (currentScale < ZOOM_LEVELS[i] - 0.01) { setScale(ZOOM_LEVELS[i]); return; } } }
+            function zoomToPrevLevel() { for (let i = ZOOM_LEVELS.length - 1; i >= 0; i--) { if (currentScale > ZOOM_LEVELS[i] + 0.01) { setScale(ZOOM_LEVELS[i]); return; } } }
 
             let isDraggingImage = false, dragStartX = 0, dragStartY = 0, startOffsetX = 0, startOffsetY = 0;
             function onDragStart(e) {
@@ -514,65 +843,31 @@
             }
             function onDragEnd() {
                 if (!isDraggingImage) return;
-                isDraggingImage = false;
-                document.body.style.userSelect = '';
-                applyBoundary();
-                applyTransform();
+                isDraggingImage = false; document.body.style.userSelect = '';
+                applyBoundary(); applyTransform();
             }
 
             let pinchStartDist = 0, pinchStartScale = 1;
-            function getTouchDistance(touches) {
-                const dx = touches[0].clientX - touches[1].clientX;
-                const dy = touches[0].clientY - touches[1].clientY;
-                return Math.sqrt(dx*dx + dy*dy);
-            }
+            function getTouchDistance(touches) { const dx = touches[0].clientX - touches[1].clientX; const dy = touches[0].clientY - touches[1].clientY; return Math.sqrt(dx * dx + dy * dy); }
             function handleTouchStart(e) {
                 if (!compareViewEl || !previewContainer.contains(e.target)) return;
-                if (e.touches.length === 2) {
-                    e.preventDefault();
-                    pinchStartDist = getTouchDistance(e.touches);
-                    pinchStartScale = currentScale;
-                } else if (e.touches.length === 1) {
-                    onDragStart(e);
-                }
+                if (e.touches.length === 2) { e.preventDefault(); pinchStartDist = getTouchDistance(e.touches); pinchStartScale = currentScale; }
+                else if (e.touches.length === 1) { onDragStart(e); }
             }
             function handleTouchMove(e) {
                 if (!compareViewEl || !previewContainer.contains(e.target)) return;
                 if (e.touches.length === 2) {
                     e.preventDefault();
                     const dist = getTouchDistance(e.touches);
-                    if (pinchStartDist > 0) {
-                        let newScale = pinchStartScale * (dist / pinchStartDist);
-                        newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale*10)/10));
-                        currentScale = newScale;
-                        applyBoundary();
-                        applyTransform();
-                    }
-                } else if (e.touches.length === 1 && isDraggingImage) {
-                    onDragMove(e);
-                }
+                    if (pinchStartDist > 0) { let newScale = pinchStartScale * (dist / pinchStartDist); newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(newScale * 10) / 10)); currentScale = newScale; applyBoundary(); applyTransform(); }
+                } else if (e.touches.length === 1 && isDraggingImage) { onDragMove(e); }
             }
-            function handleTouchEnd(e) {
-                if (e.touches.length < 2) pinchStartDist = 0;
-                if (e.touches.length === 0) onDragEnd();
-            }
+            function handleTouchEnd(e) { if (e.touches.length < 2) pinchStartDist = 0; if (e.touches.length === 0) onDragEnd(); }
 
-            stickyPreview.addEventListener('wheel', (e) => {
-                if (!compareViewEl || !previewContainer.contains(e.target)) return;
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? -0.2 : 0.2;
-                let newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round((currentScale + delta)*10)/10));
-                setScale(newScale);
-            }, { passive: false });
-
-            previewContainer.addEventListener('mousedown', (e) => {
-                if (!compareViewEl) return;
-                if (e.target.closest('#compareSliderLine')) return;
-                onDragStart(e);
-            });
+            stickyPreview.addEventListener('wheel', (e) => { if (!compareViewEl || !previewContainer.contains(e.target)) return; e.preventDefault(); const delta = e.deltaY > 0 ? -0.2 : 0.2; let newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round((currentScale + delta) * 10) / 10)); setScale(newScale); }, { passive: false });
+            previewContainer.addEventListener('mousedown', (e) => { if (!compareViewEl) return; if (e.target.closest('#compareSliderLine')) return; onDragStart(e); });
             document.addEventListener('mousemove', (e) => { if (isDraggingImage) onDragMove(e); });
             document.addEventListener('mouseup', onDragEnd);
-
             previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
             previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
             previewContainer.addEventListener('touchend', handleTouchEnd);
@@ -581,65 +876,38 @@
             zoomResetBtn.addEventListener('click', () => { dragOffsetX = dragOffsetY = 0; setScale(1); });
             zoomInBtn.addEventListener('click', zoomToNextLevel);
 
-            function loadImageFromDataURL(url) { return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; }); }
-            function imageToCanvas(img) { const c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); return c; }
-            function canvasToBlob(canvas) { return new Promise(r=>canvas.toBlob(r,'image/png')); } // 高质量PNG
-            function boxBlurH(d,r){ const {data,width,height}=d; const o=new Uint8ClampedArray(data.length); for(let y=0;y<height;y++){ for(let x=0;x<width;x++){ let rs=0,gs=0,bs=0,c=0; const x0=Math.max(0,x-r),x1=Math.min(width-1,x+r); for(let xi=x0;xi<=x1;xi++){ const i=(y*width+xi)*4; rs+=data[i];gs+=data[i+1];bs+=data[i+2];c++; } const oi=(y*width+x)*4; o[oi]=Math.round(rs/c); o[oi+1]=Math.round(gs/c); o[oi+2]=Math.round(bs/c); o[oi+3]=data[oi+3]; } } return new ImageData(o,width,height); }
-            function boxBlurV(d,r){ const {data,width,height}=d; const o=new Uint8ClampedArray(data.length); for(let y=0;y<height;y++){ for(let x=0;x<width;x++){ let rs=0,gs=0,bs=0,c=0; const y0=Math.max(0,y-r),y1=Math.min(height-1,y+r); for(let yi=y0;yi<=y1;yi++){ const i=(yi*width+x)*4; rs+=data[i];gs+=data[i+1];bs+=data[i+2];c++; } const oi=(y*width+x)*4; o[oi]=Math.round(rs/c); o[oi+1]=Math.round(gs/c); o[oi+2]=Math.round(bs/c); o[oi+3]=data[oi+3]; } } return new ImageData(o,width,height); }
-            function gaussianBlur(canvas,sigma){ const ctx=canvas.getContext('2d'); const r=Math.max(1,Math.round(sigma*1.5)); let idata=ctx.getImageData(0,0,canvas.width,canvas.height); for(let i=0;i<3;i++){ idata=boxBlurH(idata,r); idata=boxBlurV(idata,r); } const c=document.createElement('canvas'); c.width=canvas.width; c.height=canvas.height; c.getContext('2d').putImageData(idata,0,0); return c; }
-            function unsharpMask(canvas,amount){ const blurred=gaussianBlur(canvas,2.0); const ctx=canvas.getContext('2d'); const orig=ctx.getImageData(0,0,canvas.width,canvas.height); const blurCtx=blurred.getContext('2d'); const blur=blurCtx.getImageData(0,0,canvas.width,canvas.height); const out=new Uint8ClampedArray(orig.data.length); const amt=amount/100; for(let i=0;i<orig.data.length;i+=4){ for(let c=0;c<3;c++){ let v=orig.data[i+c]+(orig.data[i+c]-blur.data[i+c])*amt; out[i+c]=Math.max(0,Math.min(255,Math.round(v))); } out[i+3]=orig.data[i+3]; } const rc=document.createElement('canvas'); rc.width=canvas.width; rc.height=canvas.height; rc.getContext('2d').putImageData(new ImageData(out,canvas.width,canvas.height),0,0); return rc; }
-            function medianFilter(canvas,size){ const ctx=canvas.getContext('2d'); const idata=ctx.getImageData(0,0,canvas.width,canvas.height); const {data,width,height}=idata; const out=new Uint8ClampedArray(data.length); const half=Math.floor(size/2); for(let y=0;y<height;y++){ for(let x=0;x<width;x++){ const rv=[],gv=[],bv=[]; for(let dy=-half;dy<=half;dy++){ for(let dx=-half;dx<=half;dx++){ const nx=Math.min(width-1,Math.max(0,x+dx)); const ny=Math.min(height-1,Math.max(0,y+dy)); const i=(ny*width+nx)*4; rv.push(data[i]); gv.push(data[i+1]); bv.push(data[i+2]); } } rv.sort((a,b)=>a-b); gv.sort((a,b)=>a-b); bv.sort((a,b)=>a-b); const m=Math.floor(rv.length/2); const o=(y*width+x)*4; out[o]=rv[m]; out[o+1]=gv[m]; out[o+2]=bv[m]; out[o+3]=data[o+3]; } } const rc=document.createElement('canvas'); rc.width=width; rc.height=height; rc.getContext('2d').putImageData(new ImageData(out,width,height),0,0); return rc; }
-            function adjustContrastBrightness(canvas,contrastPercent,brightness){ const ctx=canvas.getContext('2d'); const idata=ctx.getImageData(0,0,canvas.width,canvas.height); const factor=1+contrastPercent/100; for(let i=0;i<idata.data.length;i+=4){ for(let c=0;c<3;c++){ let v=(idata.data[i+c]-128)*factor+128+brightness; idata.data[i+c]=Math.max(0,Math.min(255,Math.round(v))); } } const rc=document.createElement('canvas'); rc.width=canvas.width; rc.height=canvas.height; rc.getContext('2d').putImageData(idata,0,0); return rc; }
-            function upscaleImage(canvas,scale){ if(scale<=1) return canvas; const tw=Math.round(canvas.width*scale), th=Math.round(canvas.height*scale); const steps=scale<=1.5?1:scale<=2?2:scale<=3?3:4; const stepScale=Math.pow(scale,1/steps); let current=canvas; for(let i=0;i<steps;i++){ const sw=Math.round(current.width*stepScale), sh=Math.round(current.height*stepScale); const temp=document.createElement('canvas'); temp.width=sw; temp.height=sh; const tctx=temp.getContext('2d'); tctx.imageSmoothingEnabled=true; tctx.imageSmoothingQuality='high'; tctx.drawImage(current,0,0,sw,sh); current=temp; } const final=document.createElement('canvas'); final.width=tw; final.height=th; const fctx=final.getContext('2d'); fctx.imageSmoothingEnabled=true; fctx.imageSmoothingQuality='high'; fctx.drawImage(current,0,0,tw,th); return final; }
-            async function enhanceImage(dataURL,params){ const img=await loadImageFromDataURL(dataURL); let canvas=imageToCanvas(img); if(params.denoise==='1') canvas=medianFilter(canvas,3); else if(params.denoise==='2') canvas=medianFilter(canvas,5); canvas=upscaleImage(canvas,parseFloat(params.upscale)); if(parseInt(params.sharpen)>0) canvas=unsharpMask(canvas,parseInt(params.sharpen)); canvas=adjustContrastBrightness(canvas,parseInt(params.contrast),parseInt(params.brightness)); return canvas; }
-            async function processSingleFile(fileObj){ const params={ sharpen:sharpenSlider.value, denoise:denoiseSelect.value, upscale:upscaleSelect.value, contrast:contrastSlider.value, brightness:brightnessSlider.value }; const resultCanvas=await enhanceImage(fileObj.originalDataURL,params); const dataURL=resultCanvas.toDataURL('image/png'); // 高质量PNG fileObj.processedDataURL=dataURL; fileObj.processedBlob=await canvasToBlob(resultCanvas); return dataURL; }
+            function updateZoomButtons() { const hasView = compareViewEl !== null; zoomOutBtn.disabled = !hasView; zoomResetBtn.disabled = !hasView; zoomInBtn.disabled = !hasView; }
 
-            async function handleProcessOne(){ if(isProcessing||!activeFileId) return; const fileObj=files.find(f=>f.id===activeFileId); if(!fileObj) return; isProcessing=true; updateButtons(); showProgress(true); setProgress(15,'增强中...'); try{ const dataURL=await processSingleFile(fileObj); currentProcessedDataURL=dataURL; setProgress(100,'完成 ✨'); showComparePreview(fileObj.originalDataURL,dataURL); updateButtons(); renderFileList(); showToast('增强完成！拖动中间线对比','success'); }catch(e){ showToast('处理失败: '+e.message,'error'); } finally{ isProcessing=false; updateButtons(); setTimeout(()=>showProgress(false),1500); } }
-            async function handleProcessAll(){ if(isProcessing||files.length===0) return; isProcessing=true; updateButtons(); showProgress(true); const total=files.length; for(let i=0;i<total;i++){ setProgress(Math.round((i/total)*100),`处理中 ${i+1}/${total}`); await processSingleFile(files[i]); if(files[i].id===activeFileId&&files[i].processedDataURL){ currentProcessedDataURL=files[i].processedDataURL; showComparePreview(files[i].originalDataURL,files[i].processedDataURL); } } setProgress(100,`全部完成！共${total}张`); updateButtons(); renderFileList(); showToast(`批量处理完成！共 ${total} 张`,'success'); isProcessing=false; updateButtons(); setTimeout(()=>showProgress(false),2000); }
+            function setProgress(pct, text) { progressFill.style.width = pct + '%'; progressText.textContent = text || ''; progressText.classList.toggle('processing-indicator', pct > 0 && pct < 100); }
+            function showProgress(show) { progressWrap.style.display = show ? 'block' : 'none'; if (!show) progressFill.style.width = '0%'; }
 
-            function showProgress(show){ progressWrap.style.display=show?'block':'none'; if(!show) progressFill.style.width='0%'; }
-            function setProgress(pct,text){ progressFill.style.width=pct+'%'; progressText.textContent=text||''; progressText.classList.toggle('processing-indicator',pct>0&&pct<100); }
+            function triggerDownload(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 3000); }
+            function getOutputFilename(orig) { const dot = orig.lastIndexOf('.'); return (dot > 0 ? orig.substring(0, dot) : orig) + '_enhanced.png'; }
 
-            function triggerDownload(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),3000); }
-            function getOutputFilename(orig){ const dot=orig.lastIndexOf('.'); return (dot>0?orig.substring(0,dot):orig)+'_enhanced.png'; }
-            function handleDownloadOne(){ const f=files.find(f=>f.id===activeFileId); if(!f?.processedBlob) return showToast('请先增强','info'); triggerDownload(f.processedBlob, getOutputFilename(f.file.name)); showToast('下载开始','success'); }
-            async function handleDownloadAll(){ const processed=files.filter(f=>f.processedBlob); if(processed.length===0) return showToast('没有已处理的图片','info'); if(processed.length===1) return triggerDownload(processed[0].processedBlob, getOutputFilename(processed[0].file.name)); if(typeof JSZip==='undefined'){ processed.forEach((f,i)=>setTimeout(()=>triggerDownload(f.processedBlob, getOutputFilename(f.file.name)), i*300)); return; } const zip=new JSZip(); const nameMap={}; processed.forEach(f=>{ let name=getOutputFilename(f.file.name); if(nameMap[name]){ const d=name.lastIndexOf('.'); name=name.substring(0,d)+'_'+nameMap[name]+name.substring(d); } nameMap[name]=(nameMap[name]||0)+1; zip.file(name, f.processedBlob); }); const blob=await zip.generateAsync({type:'blob', compression:'DEFLATE'}); triggerDownload(blob, `熊啊熊增强_${Date.now()}.zip`); showToast(`打包下载 ${processed.length} 张`,'success'); }
-            function handleClearAll(){ if(isProcessing) return; files.forEach(f=>{ if(f.processedDataURL?.startsWith('blob:')) URL.revokeObjectURL(f.processedDataURL); }); files=[]; activeFileId=null; currentProcessedDataURL=null; renderFileList(); updateButtons(); showPlaceholder(); showProgress(false); showToast('已清空','info'); }
-
-            function updateAllLabels(){
-                sharpenValEl.textContent = sharpenSlider.value+'%';
-                denoiseValEl.textContent = {'0':'关闭','1':'低 (3×3)','2':'中 (5×5)'}[denoiseSelect.value];
-                upscaleValEl.textContent = ({'1':'1×','1.5':'1.5×','2':'2×','3':'3×','4':'4×'})[upscaleSelect.value]+' 放大';
-                contrastValEl.textContent = contrastSlider.value+'%';
+            function updateAllLabels() {
+                sharpenValEl.textContent = sharpenSlider.value + '%';
+                denoiseValEl.textContent = { '0': '关闭', '1': '低 (3×3)', '2': '中 (5×5)' }[denoiseSelect.value];
+                upscaleValEl.textContent = ({ '1': '1×', '1.5': '1.5×', '2': '2×', '3': '3×', '4': '4×' })[upscaleSelect.value] + ' 放大';
+                contrastValEl.textContent = contrastSlider.value + '%';
                 brightnessValEl.textContent = brightnessSlider.value;
             }
 
-            function setTheme(isDark){ if(isDark){ document.body.classList.add('dark-mode'); themeToggle.textContent='☀️'; localStorage.setItem('bear-theme','dark'); } else { document.body.classList.remove('dark-mode'); themeToggle.textContent='🌙'; localStorage.setItem('bear-theme','light'); } }
-            const savedTheme = localStorage.getItem('bear-theme'); if(savedTheme==='dark') setTheme(true); else setTheme(false);
-            themeToggle.addEventListener('click', ()=>setTheme(!document.body.classList.contains('dark-mode')));
+            function setTheme(isDark) { if (isDark) { document.body.classList.add('dark-mode'); themeToggle.textContent = '☀️'; localStorage.setItem('bear-theme', 'dark'); } else { document.body.classList.remove('dark-mode'); themeToggle.textContent = '🌙'; localStorage.setItem('bear-theme', 'light'); } }
+            const savedTheme = localStorage.getItem('bear-theme'); if (savedTheme === 'dark') setTheme(true); else setTheme(false);
+            themeToggle.addEventListener('click', () => setTheme(!document.body.classList.contains('dark-mode')));
 
-            uploadZone.addEventListener('click', ()=>fileInput.click());
-            fileInput.addEventListener('change', e=>{ if(e.target.files.length){ addFiles(e.target.files); fileInput.value=''; } });
-            uploadZone.addEventListener('dragover', e=>{ e.preventDefault(); uploadZone.classList.add('drag-over'); });
-            uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag-over'));
-            uploadZone.addEventListener('drop', e=>{ e.preventDefault(); uploadZone.classList.remove('drag-over'); if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
-            document.addEventListener('dragover', e=>{ if(e.target.closest('#uploadZone')||e.target.closest('#previewContainer')) e.preventDefault(); });
-            document.addEventListener('drop', e=>{ if(e.target.closest('#uploadZone')||(e.target.closest('#previewContainer')&&e.dataTransfer.files.length)){ e.preventDefault(); addFiles(e.dataTransfer.files); } });
-            [sharpenSlider, contrastSlider, brightnessSlider].forEach(s=>s.addEventListener('input', updateAllLabels));
-            [denoiseSelect, upscaleSelect].forEach(s=>s.addEventListener('change', updateAllLabels));
-            presetBtns.addEventListener('click', e=>{ const btn=e.target.closest('.preset-btn'); if(!btn) return; applyPreset(btn.dataset.preset); });
-            btnProcessOne.addEventListener('click', handleProcessOne);
-            btnProcessAll.addEventListener('click', handleProcessAll);
-            btnDownloadOne.addEventListener('click', handleDownloadOne);
-            btnDownloadAll.addEventListener('click', handleDownloadAll);
-            btnListClear.addEventListener('click', handleClearAll);
+            // 图片上传事件
+            uploadZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', e => { if (e.target.files.length) { addFiles(e.target.files); fileInput.value = ''; } });
+            uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+            uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+            document.addEventListener('dragover', e => { if (e.target.closest('#uploadZone') || e.target.closest('#previewContainer')) e.preventDefault(); });
+            document.addEventListener('drop', e => { if (e.target.closest('#uploadZone') || (e.target.closest('#previewContainer') && e.dataTransfer.files.length)) { e.preventDefault(); addFiles(e.dataTransfer.files); } });
 
-            document.addEventListener('keydown', e=>{
-                if(e.ctrlKey && e.key==='Enter'){ e.preventDefault(); handleProcessAll(); }
-                else if(e.key==='Enter' && !e.ctrlKey && !isProcessing && activeFileId){ e.preventDefault(); handleProcessOne(); }
-                else if(e.ctrlKey && e.key==='s'){ e.preventDefault(); handleDownloadOne(); }
-                else if(e.ctrlKey && e.key==='d'){ e.preventDefault(); handleDownloadAll(); }
-            });
+            [sharpenSlider, contrastSlider, brightnessSlider].forEach(s => s.addEventListener('input', updateAllLabels));
+            [denoiseSelect, upscaleSelect].forEach(s => s.addEventListener('change', updateAllLabels));
+            presetBtns.addEventListener('click', e => { const btn = e.target.closest('.preset-btn'); if (!btn) return; applyPreset(btn.dataset.preset); });
 
             applyPreset('mild'); updateAllLabels(); updateButtons(); showPlaceholder();
         })();
