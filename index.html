@@ -9,11 +9,11 @@
   html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
     background: #0d1117; }
-  #scene { display: block; width: 100vw; height: 100vh; cursor: grab; }
+  #scene { position: fixed; top: 0; left: 0; z-index: 1; display: block; cursor: grab; }
   #scene:active { cursor: grabbing; }
-  #panel { position: fixed; top: 12px; right: 12px; width: 312px;
+  #panel { position: fixed; top: 12px; right: 12px; z-index: 100; width: 312px;
     max-height: calc(100vh - 24px); overflow-y: auto;
-    background: rgba(20,24,33,0.9); color: #e8ecf2; border-radius: 16px; padding: 14px;
+    background: rgba(20,24,33,0.92); color: #e8ecf2; border-radius: 16px; padding: 14px;
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 12px 44px rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.09);
     font-size: 13px; user-select: none; }
@@ -64,11 +64,11 @@
     border-radius: 7px; color: #e8ecf2; font-size: 13px; padding: 6px 8px; outline: none;
     font-family: inherit; cursor: pointer; }
   select.sel option { background: #1b202b; }
-  #hint { position: fixed; left: 14px; bottom: 14px; color: rgba(255,255,255,0.72); font-size: 12px;
+  #hint { position: fixed; left: 14px; bottom: 14px; z-index: 50; color: rgba(255,255,255,0.72); font-size: 12px;
     line-height: 1.7; background: rgba(20,24,33,0.72); padding: 9px 13px; border-radius: 10px;
     backdrop-filter: blur(10px); pointer-events: none; border: 1px solid rgba(255,255,255,0.07); }
   #hint b { color: #67e8f9; font-weight: 600; }
-  #sceneName { position: fixed; left: 50%; top: 16px; transform: translateX(-50%);
+  #sceneName { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); z-index: 50;
     color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 1px;
     background: rgba(20,24,33,0.78); padding: 8px 22px; border-radius: 999px;
     backdrop-filter: blur(10px); pointer-events: none; border: 1px solid rgba(255,255,255,0.1);
@@ -76,20 +76,6 @@
 </style>
 </head>
 <body>
-
-<!-- 编码自检：非 UTF-8 时给出英文提示 -->
-<script>
-if (document.characterSet && document.characterSet.toLowerCase() !== 'utf-8') {
-  document.body.innerHTML =
-    '<div style="padding:40px;font-family:sans-serif;background:#1b202b;color:#fff;min-height:100vh">' +
-    '<h1 style="color:#ff6b6b">Encoding Problem / 编码问题</h1>' +
-    '<p>当前字符集：<b>' + document.characterSet + '</b>，需要 <b>UTF-8</b>。</p>' +
-    '<p>请把本文件另存为 <b>UTF-8 编码</b>，再刷新页面。</p>' +
-    '<p style="color:#ffd93d">Windows 记事本：另存为 → 保存类型选"所有文件" → 编码选 UTF-8</p>' +
-    '<p style="color:#ffd93d">VS Code：右下角编码 → 通过编码保存 → UTF-8</p>' +
-    '</div>';
-}
-</script>
 
 <canvas id="scene"></canvas>
 <div id="sceneName">并肩行走</div>
@@ -103,13 +89,13 @@ if (document.characterSet && document.characterSet.toLowerCase() !== 'utf-8') {
   </div>
   <div class="sect">角色</div>
   <div id="charList"></div>
-  <button id="addBtn">＋ 添加角色</button>
+  <button type="button" id="addBtn">＋ 添加角色</button>
   <div class="divider"></div>
   <div class="row" style="margin-top:0">
     <span class="lbl">视角</span>
     <div class="seg" id="modeSeg">
-      <button data-mode="third" class="on">第三人称</button>
-      <button data-mode="first">第一人称</button>
+      <button type="button" data-mode="third" class="on">第三人称</button>
+      <button type="button" data-mode="first">第一人称</button>
     </div>
   </div>
   <div class="row">
@@ -120,843 +106,862 @@ if (document.characterSet && document.characterSet.toLowerCase() !== 'utf-8') {
 
 <div id="hint"><b>拖动</b> 旋转 &nbsp;·&nbsp; <b>滚轮</b> 缩放 &nbsp;·&nbsp; <b>右键拖动</b> 上下看</div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
 <script type="module">
-import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-
-/* ===== 基础 ===== */
-const canvas = document.getElementById('scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xa9c9e6);
-scene.fog = new THREE.Fog(0xa9c9e6, 26, 80);
-const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.03, 200);
-
-scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.7));
-const sun = new THREE.DirectionalLight(0xfff4e2, 2.0);
-sun.position.set(5, 11, 7);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
-sun.shadow.camera.top = 12; sun.shadow.camera.bottom = -12;
-sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 40;
-sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
-scene.add(sun, sun.target);
-
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200),
-  new THREE.MeshStandardMaterial({ color: 0xdde3ea, roughness: 0.96 }));
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
-
-const grid = new THREE.GridHelper(120, 120, 0x93a3b8, 0xc3ccd6);
-grid.position.y = 0.004;
-grid.material.transparent = true;
-grid.material.opacity = 0.35;
-scene.add(grid);
-
-/* ===== 脸部贴图 ===== */
-const FACE_SIZE = 256;
-function drawDefaultFace(ctx, S) {
-  ctx.fillStyle = 'rgba(232,120,120,0.18)';
-  ctx.beginPath(); ctx.ellipse(S*0.245, S*0.635, S*0.085, S*0.052, 0, 0, 6.284); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(S*0.755, S*0.635, S*0.085, S*0.052, 0, 0, 6.284); ctx.fill();
-  const cx = S*0.5, eyeY = S*0.45, dx = S*0.175, rx = S*0.072, ry = S*0.086;
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.ellipse(cx-dx, eyeY, rx, ry, 0, 0, 6.284); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx+dx, eyeY, rx, ry, 0, 0, 6.284); ctx.fill();
-  ctx.fillStyle = '#4a3128';
-  ctx.beginPath(); ctx.arc(cx-dx, eyeY+S*0.006, rx*0.62, 0, 6.284); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx+dx, eyeY+S*0.006, rx*0.62, 0, 6.284); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(cx-dx+rx*0.24, eyeY-ry*0.26, rx*0.23, 0, 6.284); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx+dx+rx*0.24, eyeY-ry*0.26, rx*0.23, 0, 6.284); ctx.fill();
-  ctx.strokeStyle = '#4a352a'; ctx.lineWidth = S*0.022; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(cx-dx-rx*0.95, eyeY-ry*1.62);
-  ctx.quadraticCurveTo(cx-dx, eyeY-ry*2.15, cx-dx+rx*0.95, eyeY-ry*1.62); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx+dx-rx*0.95, eyeY-ry*1.62);
-  ctx.quadraticCurveTo(cx+dx, eyeY-ry*2.15, cx+dx+rx*0.95, eyeY-ry*1.62); ctx.stroke();
-  ctx.strokeStyle = 'rgba(150,100,80,0.5)'; ctx.lineWidth = S*0.014;
-  ctx.beginPath(); ctx.moveTo(cx, S*0.525); ctx.lineTo(cx, S*0.565); ctx.stroke();
-  ctx.strokeStyle = '#b2564c'; ctx.lineWidth = S*0.02;
-  ctx.beginPath(); ctx.arc(cx, S*0.625, S*0.075, 0.16*Math.PI, 0.84*Math.PI); ctx.stroke();
-}
-function createFaceTexture(img, skinColor) {
-  const c = document.createElement('canvas');
-  c.width = c.height = FACE_SIZE;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = skinColor; ctx.fillRect(0, 0, FACE_SIZE, FACE_SIZE);
-  if (img) {
-    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
-    if (iw && ih) {
-      const s = Math.max(FACE_SIZE/iw, FACE_SIZE/ih);
-      ctx.drawImage(img, (FACE_SIZE - iw*s)/2, (FACE_SIZE - ih*s)/2, iw*s, ih*s);
-    }
-  } else { drawDefaultFace(ctx, FACE_SIZE); }
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
-}
-
-/* ===== 角色 ===== */
-const SKIN_COLORS = ['#f3cbaa', '#eab98f', '#d9a273', '#b87c4c', '#8d5524'];
-const BODY = { headH: 0.135, torsoH: 0.335, legH: 0.53 };
-let uid = 0;
-const chars = [];
-const state = { mode: 'third', activeId: 0, yaw: Math.PI, pitch: 0.14, dist: 2.6, sceneIndex: 0 };
-
-function makeChar(o) {
-  return Object.assign({
-    id: ++uid, name: '角色', gender: 'male', height: 1.70,
-    skinColor: SKIN_COLORS[0], faceImage: null, group: null, label: null, pose: {}
-  }, o);
-}
-function roundedBox(w, h, d, mat, r = 0.012) {
-  const geo = new RoundedBoxGeometry(w, h, d, 2, Math.min(r, Math.min(w,h,d)*0.45));
-  const m = new THREE.Mesh(geo, mat);
-  m.castShadow = true; m.receiveShadow = true;
-  return m;
-}
-function buildCharacter(ch) {
-  const g = new THREE.Group();
-  const isF = ch.gender === 'female';
-  const H = BODY;
-  const skinMat = new THREE.MeshStandardMaterial({ color: ch.skinColor, roughness: 0.78 });
-  const clothMat = new THREE.MeshStandardMaterial({ color: isF ? 0xd9578c : 0x3f6fb5, roughness: 0.88 });
-  const pantsMat = new THREE.MeshStandardMaterial({ color: isF ? 0x4b4a6b : 0x2f3542, roughness: 0.92 });
-  const hairMat = new THREE.MeshStandardMaterial({ color: isF ? 0x3a2a1e : 0x2b2118, roughness: 0.9 });
-  const headW = isF ? 0.108 : 0.118, headD = 0.118;
-  const torsoW = isF ? 0.205 : 0.242, torsoD = isF ? 0.115 : 0.132;
-  const legW = torsoW*0.34, legD = torsoD*0.85;
-  const armW = torsoW*0.19, armD = torsoD*0.78, armH = 0.44;
-  const neckW = torsoW*0.24;
-
-  const legL = new THREE.Group();
-  legL.position.set(-torsoW*0.21, H.legH, 0);
-  const lm1 = roundedBox(legW, H.legH, legD, pantsMat, 0.014);
-  lm1.position.y = -H.legH/2; legL.add(lm1);
-
-  const legR = new THREE.Group();
-  legR.position.set(torsoW*0.21, H.legH, 0);
-  const lm2 = roundedBox(legW, H.legH, legD, pantsMat, 0.014);
-  lm2.position.y = -H.legH/2; legR.add(lm2);
-
-  const torso = new THREE.Group();
-  torso.position.y = H.legH;
-  const tm = roundedBox(torsoW, H.torsoH, torsoD, clothMat, 0.02);
-  tm.position.y = H.torsoH/2; torso.add(tm);
-  const neck = roundedBox(neckW, 0.05, neckW, skinMat, 0.01);
-  neck.position.y = H.torsoH + 0.012; torso.add(neck);
-
-  const shoulderY = H.torsoH*0.88;
-  const armL = new THREE.Group();
-  armL.position.set(-(torsoW/2 + armW/2 - 0.006), shoulderY, 0);
-  const am1 = roundedBox(armW, armH, armD, clothMat, 0.014);
-  am1.position.y = -armH/2; armL.add(am1);
-  const armR = new THREE.Group();
-  armR.position.set(torsoW/2 + armW/2 - 0.006, shoulderY, 0);
-  const am2 = roundedBox(armW, armH, armD, clothMat, 0.014);
-  am2.position.y = -armH/2; armR.add(am2);
-  torso.add(armL, armR);
-
-  const headPivot = new THREE.Group();
-  headPivot.position.y = H.torsoH + 0.036;
-  const faceMat = new THREE.MeshStandardMaterial({ map: createFaceTexture(ch.faceImage, ch.skinColor), roughness: 0.82 });
-  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(headW, H.headH, headD),
-    [skinMat, skinMat, skinMat, skinMat, faceMat, skinMat]);
-  headMesh.position.y = H.headH/2;
-  headMesh.castShadow = true; headMesh.receiveShadow = true;
-  headPivot.add(headMesh);
-  const hair = roundedBox(headW*1.06, H.headH*0.5, headD*1.06, hairMat, 0.02);
-  hair.position.y = H.headH*0.88;
-  headPivot.add(hair);
-  torso.add(headPivot);
-  g.add(legL, legR, torso);
-  g.userData = { legL, legR, torso, armL, armR, headPivot, headMesh };
-  return g;
-}
-
-const DEFAULT_POSE = { x:0,y:0,z:0,rotY:0,tilt:0,lean:0,headX:0,headY:0,armLX:0,armLZ:0,armRX:0,armRZ:0,legLX:0,legRX:0 };
-function setPose(ch, p) {
-  ch.pose = Object.assign({}, DEFAULT_POSE, p);
-  if (!ch.group) return;
-  const u = ch.group.userData, q = ch.pose;
-  ch.group.position.set(q.x, q.y, q.z);
-  ch.group.rotation.set(0, q.rotY, q.tilt);
-  u.torso.rotation.x = q.lean;
-  u.headPivot.rotation.set(q.headX, q.headY, 0);
-  u.armL.rotation.set(q.armLX, 0, q.armLZ);
-  u.armR.rotation.set(q.armRX, 0, q.armRZ);
-  u.legL.rotation.x = q.legLX;
-  u.legR.rotation.x = q.legRX;
-}
-
-/* ===== 名牌 ===== */
-function makeLabel(ch) {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 128;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = 'rgba(16,20,28,0.72)';
-  const r = 26, x = 10, y = 22, w = 492, h = 84;
-  ctx.beginPath();
-  ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
-  ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 44px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(ch.name + ' · ' + Math.round(ch.height*100) + 'cm', 256, 66);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
-  sp.scale.set(1.0, 0.25, 1); sp.center.set(0.5, 0);
-  return sp;
-}
-function updateLabel(ch) {
-  if (ch.label) {
-    scene.remove(ch.label);
-    ch.label.material.map.dispose();
-    ch.label.material.dispose();
+(async () => {
+  /* ---------- 错误提示框 ---------- */
+  const errBox = document.createElement('div');
+  errBox.style.cssText = 'position:fixed;left:12px;top:12px;z-index:9999;max-width:70vw;' +
+    'background:#7f1d1d;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;' +
+    'white-space:pre-wrap;display:none;font-family:monospace;box-shadow:0 8px 30px rgba(0,0,0,.5)';
+  document.body.appendChild(errBox);
+  function showError(msg) {
+    errBox.style.display = 'block';
+    errBox.textContent = '⚠ 出错了：\n' + msg;
   }
-  ch.label = makeLabel(ch);
-  scene.add(ch.label);
-}
-const _v = new THREE.Vector3();
-function positionLabel(ch) {
-  if (!ch.label || !ch.group) return;
-  ch.group.userData.headMesh.getWorldPosition(_v);
-  ch.label.position.set(_v.x, _v.y + 0.24, _v.z);
-}
+  window.addEventListener('error', e => showError(e.message));
+  window.addEventListener('unhandledrejection', e => showError(String(e.reason)));
 
-/* ===== 道具 ===== */
-const propGroup = new THREE.Group();
-scene.add(propGroup);
-function disposeObj(o) {
-  o.traverse(n => {
-    if (n.geometry) n.geometry.dispose();
-    if (n.material) {
-      const ms = Array.isArray(n.material) ? n.material : [n.material];
-      ms.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+  /* ---------- 加载 Three.js ---------- */
+  let THREE;
+  try {
+    THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+  } catch (e) {
+    showError('Three.js 加载失败，请检查网络连接后刷新页面。\n' + e.message);
+    return;
+  }
+
+  /* ========== 1. 基础 ========== */
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xa9c9e6);
+  scene.fog = new THREE.Fog(0xa9c9e6, 26, 80);
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.03, 200);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.7));
+  const sun = new THREE.DirectionalLight(0xfff4e2, 2.0);
+  sun.position.set(5, 11, 7);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
+  sun.shadow.camera.top = 12; sun.shadow.camera.bottom = -12;
+  sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 40;
+  sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
+  scene.add(sun, sun.target);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({ color: 0xdde3ea, roughness: 0.96 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const grid = new THREE.GridHelper(120, 120, 0x93a3b8, 0xc3ccd6);
+  grid.position.y = 0.004;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.35;
+  scene.add(grid);
+
+  /* ========== 2. 脸部贴图 ========== */
+  const FACE_SIZE = 256;
+  function drawDefaultFace(ctx, S) {
+    ctx.fillStyle = 'rgba(232,120,120,0.18)';
+    ctx.beginPath(); ctx.ellipse(S*0.245, S*0.635, S*0.085, S*0.052, 0, 0, 6.284); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(S*0.755, S*0.635, S*0.085, S*0.052, 0, 0, 6.284); ctx.fill();
+    const cx = S*0.5, eyeY = S*0.45, dx = S*0.175, rx = S*0.072, ry = S*0.086;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(cx-dx, eyeY, rx, ry, 0, 0, 6.284); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+dx, eyeY, rx, ry, 0, 0, 6.284); ctx.fill();
+    ctx.fillStyle = '#4a3128';
+    ctx.beginPath(); ctx.arc(cx-dx, eyeY+S*0.006, rx*0.62, 0, 6.284); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+dx, eyeY+S*0.006, rx*0.62, 0, 6.284); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx-dx+rx*0.24, eyeY-ry*0.26, rx*0.23, 0, 6.284); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+dx+rx*0.24, eyeY-ry*0.26, rx*0.23, 0, 6.284); ctx.fill();
+    ctx.strokeStyle = '#4a352a'; ctx.lineWidth = S*0.022; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx-dx-rx*0.95, eyeY-ry*1.62);
+    ctx.quadraticCurveTo(cx-dx, eyeY-ry*2.15, cx-dx+rx*0.95, eyeY-ry*1.62); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+dx-rx*0.95, eyeY-ry*1.62);
+    ctx.quadraticCurveTo(cx+dx, eyeY-ry*2.15, cx+dx+rx*0.95, eyeY-ry*1.62); ctx.stroke();
+    ctx.strokeStyle = 'rgba(150,100,80,0.5)'; ctx.lineWidth = S*0.014;
+    ctx.beginPath(); ctx.moveTo(cx, S*0.525); ctx.lineTo(cx, S*0.565); ctx.stroke();
+    ctx.strokeStyle = '#b2564c'; ctx.lineWidth = S*0.02;
+    ctx.beginPath(); ctx.arc(cx, S*0.625, S*0.075, 0.16*Math.PI, 0.84*Math.PI); ctx.stroke();
+  }
+  function createFaceTexture(img, skinColor) {
+    const c = document.createElement('canvas');
+    c.width = c.height = FACE_SIZE;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = skinColor; ctx.fillRect(0, 0, FACE_SIZE, FACE_SIZE);
+    if (img) {
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      if (iw && ih) {
+        const s = Math.max(FACE_SIZE/iw, FACE_SIZE/ih);
+        ctx.drawImage(img, (FACE_SIZE - iw*s)/2, (FACE_SIZE - ih*s)/2, iw*s, ih*s);
+      }
+    } else { drawDefaultFace(ctx, FACE_SIZE); }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  /* ========== 3. 角色 ========== */
+  const SKIN_COLORS = ['#f3cbaa', '#eab98f', '#d9a273', '#b87c4c', '#8d5524'];
+  const BODY = { headH: 0.135, torsoH: 0.335, legH: 0.53 };
+  let uid = 0;
+  const chars = [];
+  const state = { mode: 'third', activeId: 0, yaw: Math.PI, pitch: 0.14, dist: 2.6, sceneIndex: 0 };
+
+  function makeChar(o) {
+    return Object.assign({
+      id: ++uid, name: '角色', gender: 'male', height: 1.70,
+      skinColor: SKIN_COLORS[0], faceImage: null, group: null, label: null, pose: {}
+    }, o);
+  }
+
+  // 自实现圆角盒（视觉略方一点，但零额外依赖）
+  function roundedBox(w, h, d, mat) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.castShadow = true; m.receiveShadow = true;
+    return m;
+  }
+
+  function buildCharacter(ch) {
+    const g = new THREE.Group();
+    const isF = ch.gender === 'female';
+    const H = BODY;
+    const skinMat = new THREE.MeshStandardMaterial({ color: ch.skinColor, roughness: 0.78 });
+    const clothMat = new THREE.MeshStandardMaterial({ color: isF ? 0xd9578c : 0x3f6fb5, roughness: 0.88 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: isF ? 0x4b4a6b : 0x2f3542, roughness: 0.92 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: isF ? 0x3a2a1e : 0x2b2118, roughness: 0.9 });
+    const headW = isF ? 0.108 : 0.118, headD = 0.118;
+    const torsoW = isF ? 0.205 : 0.242, torsoD = isF ? 0.115 : 0.132;
+    const legW = torsoW*0.34, legD = torsoD*0.85;
+    const armW = torsoW*0.19, armD = torsoD*0.78, armH = 0.44;
+    const neckW = torsoW*0.24;
+
+    const legL = new THREE.Group();
+    legL.position.set(-torsoW*0.21, H.legH, 0);
+    const lm1 = roundedBox(legW, H.legH, legD, pantsMat);
+    lm1.position.y = -H.legH/2; legL.add(lm1);
+
+    const legR = new THREE.Group();
+    legR.position.set(torsoW*0.21, H.legH, 0);
+    const lm2 = roundedBox(legW, H.legH, legD, pantsMat);
+    lm2.position.y = -H.legH/2; legR.add(lm2);
+
+    const torso = new THREE.Group();
+    torso.position.y = H.legH;
+    const tm = roundedBox(torsoW, H.torsoH, torsoD, clothMat);
+    tm.position.y = H.torsoH/2; torso.add(tm);
+    const neck = roundedBox(neckW, 0.05, neckW, skinMat);
+    neck.position.y = H.torsoH + 0.012; torso.add(neck);
+
+    const shoulderY = H.torsoH*0.88;
+    const armL = new THREE.Group();
+    armL.position.set(-(torsoW/2 + armW/2 - 0.006), shoulderY, 0);
+    const am1 = roundedBox(armW, armH, armD, clothMat);
+    am1.position.y = -armH/2; armL.add(am1);
+    const armR = new THREE.Group();
+    armR.position.set(torsoW/2 + armW/2 - 0.006, shoulderY, 0);
+    const am2 = roundedBox(armW, armH, armD, clothMat);
+    am2.position.y = -armH/2; armR.add(am2);
+    torso.add(armL, armR);
+
+    const headPivot = new THREE.Group();
+    headPivot.position.y = H.torsoH + 0.036;
+    const faceMat = new THREE.MeshStandardMaterial({ map: createFaceTexture(ch.faceImage, ch.skinColor), roughness: 0.82 });
+    const headMesh = new THREE.Mesh(new THREE.BoxGeometry(headW, H.headH, headD),
+      [skinMat, skinMat, skinMat, skinMat, faceMat, skinMat]);
+    headMesh.position.y = H.headH/2;
+    headMesh.castShadow = true; headMesh.receiveShadow = true;
+    headPivot.add(headMesh);
+    const hair = roundedBox(headW*1.06, H.headH*0.5, headD*1.06, hairMat);
+    hair.position.y = H.headH*0.88;
+    headPivot.add(hair);
+    torso.add(headPivot);
+    g.add(legL, legR, torso);
+    g.userData = { legL, legR, torso, armL, armR, headPivot, headMesh };
+    return g;
+  }
+
+  const DEFAULT_POSE = { x:0,y:0,z:0,rotY:0,tilt:0,lean:0,headX:0,headY:0,armLX:0,armLZ:0,armRX:0,armRZ:0,legLX:0,legRX:0 };
+  function setPose(ch, p) {
+    ch.pose = Object.assign({}, DEFAULT_POSE, p);
+    if (!ch.group) return;
+    const u = ch.group.userData, q = ch.pose;
+    ch.group.position.set(q.x, q.y, q.z);
+    ch.group.rotation.set(0, q.rotY, q.tilt);
+    u.torso.rotation.x = q.lean;
+    u.headPivot.rotation.set(q.headX, q.headY, 0);
+    u.armL.rotation.set(q.armLX, 0, q.armLZ);
+    u.armR.rotation.set(q.armRX, 0, q.armRZ);
+    u.legL.rotation.x = q.legLX;
+    u.legR.rotation.x = q.legRX;
+  }
+
+  /* ========== 4. 名牌 ========== */
+  function makeLabel(ch) {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgba(16,20,28,0.72)';
+    const r = 26, x = 10, y = 22, w = 492, h = 84;
+    ctx.beginPath();
+    ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 44px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(ch.name + ' · ' + Math.round(ch.height*100) + 'cm', 256, 66);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+    sp.scale.set(1.0, 0.25, 1); sp.center.set(0.5, 0);
+    return sp;
+  }
+  function updateLabel(ch) {
+    if (ch.label) {
+      scene.remove(ch.label);
+      ch.label.material.map.dispose();
+      ch.label.material.dispose();
+    }
+    ch.label = makeLabel(ch);
+    scene.add(ch.label);
+  }
+  const _v = new THREE.Vector3();
+  function positionLabel(ch) {
+    if (!ch.label || !ch.group) return;
+    ch.group.userData.headMesh.getWorldPosition(_v);
+    ch.label.position.set(_v.x, _v.y + 0.24, _v.z);
+  }
+
+  /* ========== 5. 道具 ========== */
+  const propGroup = new THREE.Group();
+  scene.add(propGroup);
+  function disposeObj(o) {
+    o.traverse(n => {
+      if (n.geometry) n.geometry.dispose();
+      if (n.material) {
+        const ms = Array.isArray(n.material) ? n.material : [n.material];
+        ms.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+      }
+    });
+  }
+  function clearProps() {
+    while (propGroup.children.length) {
+      const o = propGroup.children[0];
+      propGroup.remove(o); disposeObj(o);
+    }
+  }
+  function addBox(w, h, d, x, y, z, color, rot) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({ color, roughness: 0.86 }));
+    m.position.set(x,y,z);
+    if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+    m.castShadow = true; m.receiveShadow = true;
+    propGroup.add(m); return m;
+  }
+  function addCyl(rt, rb, h, x, y, z, color, rot) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 18),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1 }));
+    m.position.set(x,y,z);
+    if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+    m.castShadow = true; m.receiveShadow = true;
+    propGroup.add(m); return m;
+  }
+  function addSphere(r, x, y, z, color, emissive) {
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
+    if (emissive) { mat.emissive = new THREE.Color(emissive); mat.emissiveIntensity = 0.9; }
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat);
+    m.position.set(x,y,z); m.castShadow = true;
+    propGroup.add(m); return m;
+  }
+  function addTorus(r, tube, x, y, z, color, rot) {
+    const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 10, 24),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.7 }));
+    m.position.set(x,y,z);
+    if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+    m.castShadow = true;
+    propGroup.add(m); return m;
+  }
+  function addPlane(w, h, x, y, z, color, opacity, rot) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide }));
+    m.position.set(x,y,z);
+    if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+    propGroup.add(m); return m;
+  }
+
+  /* ========== 6. 31 个场景 ========== */
+  const SCENES = [];
+  function scene(name, build) { SCENES.push({ name, build }); }
+  function order(A, B) { return A.height >= B.height ? [A, B] : [B, A]; }
+  const HP = Math.PI/2;
+
+  scene('并肩行走', (A,B) => {
+    setPose(A, { x:-0.32, armLX:0.35, armRX:-0.35, legLX:-0.22, legRX:0.22 });
+    setPose(B, { x:0.32, armLX:-0.35, armRX:0.35, legLX:0.22, legRX:-0.22 });
+  });
+  scene('靠墙比身高', (A,B) => {
+    addBox(3.0, 2.8, 0.1, 0, 1.4, -0.68, 0xe6e0d6);
+    for (let cm = 140; cm <= 200; cm += 10) {
+      const w = cm % 50 === 0 ? 0.24 : 0.13;
+      addBox(w, 0.012, 0.02, -0.85, cm/100, -0.62, 0x8b8378);
+    }
+    setPose(A, { x:-0.34, z:-0.54 });
+    setPose(B, { x:0.34, z:-0.54 });
+  });
+  scene('台阶站位', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(1.7, 0.3, 1.2, 0.38, 0.15, 0, 0xd2cbc1);
+    addBox(1.7, 0.02, 1.2, 0.38, 0.305, 0, 0xbcb4a8);
+    setPose(S, { x:0.38, y:0.3 });
+    setPose(T, { x:-0.52, z:0.18 });
+  });
+  scene('沙发同坐', (A,B) => {
+    const seatH = 0.44;
+    addBox(2.2, 0.34, 0.95, 0, seatH-0.3, 0.08, 0x6b5a43);
+    addBox(2.2, 0.15, 0.95, 0, seatH-0.075, 0.08, 0x9d8768);
+    addBox(2.2, 0.85, 0.17, 0, seatH+0.36, -0.4, 0x8b7355);
+    addBox(0.17, 0.48, 0.95, -1.06, seatH+0.12, 0.08, 0x7a6549);
+    addBox(0.17, 0.48, 0.95, 1.06, seatH+0.12, 0.08, 0x7a6549);
+    setPose(A, { x:-0.48, y:seatH-BODY.legH*A.height, z:0.08, legLX:-HP, legRX:-HP, armLX:-0.3, armRX:-0.3 });
+    setPose(B, { x:0.48, y:seatH-BODY.legH*B.height, z:0.08, legLX:-HP, legRX:-HP, armLX:-0.3, armRX:-0.3 });
+  });
+  scene('柜台排队', (A,B) => {
+    addBox(2.7, 0.98, 0.55, 0, 0.49, -0.42, 0xd8cfc0);
+    addBox(2.82, 0.07, 0.68, 0, 1.0, -0.42, 0xb5a894);
+    setPose(A, { x:-0.34, z:0.18, armLX:-0.7, armRX:-0.7, armLZ:-0.1, armRZ:0.1 });
+    setPose(B, { x:0.34, z:0.18, armLX:-0.7, armRX:-0.7, armLZ:-0.1, armRZ:0.1 });
+  });
+  scene('互递物品', (A,B) => {
+    setPose(A, { x:-0.38, armLX:-1.35, armRX:-1.35, armLZ:-0.18, armRZ:0.18 });
+    setPose(B, { x:0.38, rotY:Math.PI, armLX:-1.35, armRX:-1.35, armLZ:-0.18, armRZ:0.18 });
+    addBox(0.17, 0.17, 0.17, 0, 1.08, 0, 0xf0a030);
+    addBox(0.19, 0.03, 0.19, 0, 1.175, 0, 0xd98c1f);
+  });
+  scene('高处取书', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(0.44, 2.2, 1.55, 0.94, 1.1, -0.25, 0x8b6f47);
+    for (let i = 0; i < 4; i++) addBox(0.4, 0.03, 1.45, 0.94, 0.5 + i*0.5, -0.25, 0x74593a);
+    addBox(0.07, 0.32, 0.23, 0.76, 1.86, -0.05, 0xd94f4f);
+    addBox(0.07, 0.30, 0.22, 0.76, 1.52, -0.05, 0x4f8bd9);
+    addBox(0.07, 0.28, 0.21, 0.76, 1.18, -0.05, 0x4fd97a);
+    setPose(T, { x:0.46, z:0.28, armLX:-2.45, armRX:-2.45, armLZ:-0.12, armRZ:0.12, headX:-0.12 });
+    setPose(S, { x:-0.26, z:0.36, headX:-0.16 });
+  });
+  scene('冰箱拿零食', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(0.8, 1.98, 0.75, 0.8, 0.99, -0.15, 0xdcdfe3);
+    addBox(0.04, 1.78, 0.68, 0.38, 1.0, 0.21, 0xc4c9cf, [0,0.9,0]);
+    addBox(0.62, 0.04, 0.58, 0.8, 1.28, -0.15, 0xb9bfc6);
+    addBox(0.62, 0.04, 0.58, 0.8, 0.82, -0.15, 0xb9bfc6);
+    addBox(0.12, 0.2, 0.12, 0.74, 1.38, -0.15, 0xe85d5d);
+    addBox(0.12, 0.2, 0.12, 0.92, 1.38, -0.15, 0x5d8ce8);
+    addBox(0.14, 0.16, 0.14, 0.74, 0.94, -0.15, 0x7ecb8b);
+    setPose(T, { x:0.14, z:0.32, armLX:-1.55, armRX:-1.55, armLZ:-0.24, armRZ:0.24, headX:0.05 });
+    setPose(S, { x:-0.32, z:0.38, headX:-0.05 });
+  });
+  scene('挂画贴饰', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(3.4, 2.9, 0.09, 0, 1.45, -0.62, 0xe2ddd3);
+    addBox(0.72, 0.94, 0.05, 0.2, 1.88, -0.56, 0xc9a227);
+    addBox(0.62, 0.84, 0.04, 0.2, 1.88, -0.53, 0x9bc9e8);
+    setPose(T, { x:0.2, z:-0.34, armLX:-2.25, armRX:-2.25, armLZ:-0.14, armRZ:0.14, headX:-0.14 });
+    setPose(S, { x:-0.58, z:-0.06, headX:-0.16, rotY:0.35 });
+  });
+  scene('收取衣架', (A,B) => {
+    const [T,S] = order(A,B);
+    addCyl(0.022, 0.022, 2.6, 0, 2.1, -0.36, 0x9aa3ad, [0,0,HP]);
+    addCyl(0.03, 0.03, 2.0, -1.25, 1.0, -0.36, 0x9aa3ad);
+    addCyl(0.03, 0.03, 2.0, 1.25, 1.0, -0.36, 0x9aa3ad);
+    addTorus(0.11, 0.012, 0.1, 1.96, -0.36, 0xbfc4cc);
+    addBox(0.34, 0.5, 0.04, 0.1, 1.66, -0.36, 0x6d8fb8);
+    addBox(0.36, 0.12, 0.05, 0.1, 1.94, -0.36, 0xbfc4cc);
+    setPose(T, { x:0.16, z:0.06, armLX:-2.35, armRX:-2.35, armLZ:-0.1, armRZ:0.1, headX:-0.16 });
+    setPose(S, { x:-0.46, z:0.14, headX:-0.12, rotY:0.25 });
+  });
+  scene('更换灯泡', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(2.6, 0.12, 0.35, 0, 2.65, 0, 0xdadada);
+    addCyl(0.012, 0.012, 0.34, 0.2, 2.45, 0, 0x555555);
+    addSphere(0.1, 0.2, 2.31, 0, 0xfff4c0, 0xfff4c0);
+    addBox(0.46, 0.06, 0.46, -0.1, 0.45, 0, 0xa8763e);
+    for (const [px, pz] of [[-0.26,-0.16],[0.06,-0.16],[-0.26,0.16],[0.06,0.16]])
+      addCyl(0.03, 0.03, 0.45, px, 0.225, pz, 0x8a5f2e);
+    setPose(T, { x:-0.1, y:0.48, armLX:-2.6, armRX:-2.6, armLZ:-0.12, armRZ:0.12, headX:-0.2 });
+    setPose(S, { x:-0.76, z:0.22, armLX:-1.5, armRX:-1.5, armLZ:-0.18, armRZ:0.18, headX:-0.1 });
+    addSphere(0.055, -0.66, 1.02, 0.3, 0xfff4c0, 0xfff4c0);
+  });
+  scene('开门锁', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(1.05, 2.2, 0.08, 0.1, 1.1, -0.58, 0xb08968);
+    addSphere(0.045, 0.52, 1.08, -0.52, 0xd8c8a8);
+    addCyl(0.014, 0.014, 0.1, 0.52, 1.08, -0.55, 0xb8a888, [HP,0,0]);
+    setPose(T, { x:0.08, z:-0.3, armRX:-1.35, armRZ:0.35, headX:0.05 });
+    setPose(S, { x:-0.56, z:-0.1, rotY:0.4, headX:-0.05 });
+  });
+  scene('吹头发', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.3, rotY:0.15 });
+    setPose(T, { x:0.42, z:0.12, rotY:-1.15, armLX:-1.7, armLZ:-0.3, armRX:-0.25, headX:0.05 });
+    const hx = 0.24, hy = 1.28, hz = 0.3;
+    addCyl(0.055, 0.045, 0.2, hx, hy, hz, 0x3a3f47, [0,0,HP]);
+    addBox(0.1, 0.16, 0.12, hx+0.02, hy-0.13, hz, 0x3a3f47);
+    addCyl(0.04, 0.055, 0.07, hx-0.13, hy, hz, 0x2a2f37, [0,0,HP]);
+  });
+  scene('共撑一把伞', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.3, rotY:0.1 });
+    setPose(T, { x:0.34, rotY:-0.1, armLX:-2.3, armLZ:-0.22, armRX:-0.3 });
+    const topY = T.height + 0.62;
+    const canopy = new THREE.Mesh(
+      new THREE.SphereGeometry(0.98, 22, 11, 0, Math.PI*2, 0, HP),
+      new THREE.MeshStandardMaterial({ color: 0xd94f4f, roughness: 0.82, side: THREE.DoubleSide })
+    );
+    canopy.position.set(0.02, topY, 0.05);
+    canopy.castShadow = true;
+    propGroup.add(canopy);
+    addCyl(0.016, 0.016, 1.5, 0.02, topY-0.75, 0.05, 0x6b6b6b);
+    addTorus(0.05, 0.012, 0.02, topY-1.48, 0.05, 0x6b6b6b, [HP,0,0]);
+    for (let i = 0; i < 26; i++) {
+      addCyl(0.004, 0.004, 0.13,
+        (Math.random()-0.5)*4.5, Math.random()*3+0.4, (Math.random()-0.5)*3.5,
+        0x9ec8e8, [0.12,0,0.12]);
     }
   });
-}
-function clearProps() {
-  while (propGroup.children.length) {
-    const o = propGroup.children[0];
-    propGroup.remove(o); disposeObj(o);
-  }
-}
-function addBox(w, h, d, x, y, z, color, rot) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({ color, roughness: 0.86 }));
-  m.position.set(x,y,z);
-  if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
-  m.castShadow = true; m.receiveShadow = true;
-  propGroup.add(m); return m;
-}
-function addCyl(rt, rb, h, x, y, z, color, rot) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 18),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1 }));
-  m.position.set(x,y,z);
-  if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
-  m.castShadow = true; m.receiveShadow = true;
-  propGroup.add(m); return m;
-}
-function addSphere(r, x, y, z, color, emissive) {
-  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
-  if (emissive) { mat.emissive = new THREE.Color(emissive); mat.emissiveIntensity = 0.9; }
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat);
-  m.position.set(x,y,z); m.castShadow = true;
-  propGroup.add(m); return m;
-}
-function addTorus(r, tube, x, y, z, color, rot) {
-  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 10, 24),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.7 }));
-  m.position.set(x,y,z);
-  if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
-  m.castShadow = true;
-  propGroup.add(m); return m;
-}
-function addPlane(w, h, x, y, z, color, opacity, rot) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide }));
-  m.position.set(x,y,z);
-  if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
-  propGroup.add(m); return m;
-}
-
-/* ===== 31 个场景 ===== */
-const SCENES = [];
-function scene(name, build) { SCENES.push({ name, build }); }
-function order(A, B) { return A.height >= B.height ? [A, B] : [B, A]; }
-const HP = Math.PI/2;
-
-scene('并肩行走', (A,B) => {
-  setPose(A, { x:-0.32, armLX:0.35, armRX:-0.35, legLX:-0.22, legRX:0.22 });
-  setPose(B, { x:0.32, armLX:-0.35, armRX:0.35, legLX:0.22, legRX:-0.22 });
-});
-scene('靠墙比身高', (A,B) => {
-  addBox(3.0, 2.8, 0.1, 0, 1.4, -0.68, 0xe6e0d6);
-  for (let cm = 140; cm <= 200; cm += 10) {
-    const w = cm % 50 === 0 ? 0.24 : 0.13;
-    addBox(w, 0.012, 0.02, -0.85, cm/100, -0.62, 0x8b8378);
-  }
-  setPose(A, { x:-0.34, z:-0.54 });
-  setPose(B, { x:0.34, z:-0.54 });
-});
-scene('台阶站位', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(1.7, 0.3, 1.2, 0.38, 0.15, 0, 0xd2cbc1);
-  addBox(1.7, 0.02, 1.2, 0.38, 0.305, 0, 0xbcb4a8);
-  setPose(S, { x:0.38, y:0.3 });
-  setPose(T, { x:-0.52, z:0.18 });
-});
-scene('沙发同坐', (A,B) => {
-  const seatH = 0.44;
-  addBox(2.2, 0.34, 0.95, 0, seatH-0.3, 0.08, 0x6b5a43);
-  addBox(2.2, 0.15, 0.95, 0, seatH-0.075, 0.08, 0x9d8768);
-  addBox(2.2, 0.85, 0.17, 0, seatH+0.36, -0.4, 0x8b7355);
-  addBox(0.17, 0.48, 0.95, -1.06, seatH+0.12, 0.08, 0x7a6549);
-  addBox(0.17, 0.48, 0.95, 1.06, seatH+0.12, 0.08, 0x7a6549);
-  setPose(A, { x:-0.48, y:seatH-BODY.legH*A.height, z:0.08, legLX:-HP, legRX:-HP, armLX:-0.3, armRX:-0.3 });
-  setPose(B, { x:0.48, y:seatH-BODY.legH*B.height, z:0.08, legLX:-HP, legRX:-HP, armLX:-0.3, armRX:-0.3 });
-});
-scene('柜台排队', (A,B) => {
-  addBox(2.7, 0.98, 0.55, 0, 0.49, -0.42, 0xd8cfc0);
-  addBox(2.82, 0.07, 0.68, 0, 1.0, -0.42, 0xb5a894);
-  setPose(A, { x:-0.34, z:0.18, armLX:-0.7, armRX:-0.7, armLZ:-0.1, armRZ:0.1 });
-  setPose(B, { x:0.34, z:0.18, armLX:-0.7, armRX:-0.7, armLZ:-0.1, armRZ:0.1 });
-});
-scene('互递物品', (A,B) => {
-  setPose(A, { x:-0.38, armLX:-1.35, armRX:-1.35, armLZ:-0.18, armRZ:0.18 });
-  setPose(B, { x:0.38, rotY:Math.PI, armLX:-1.35, armRX:-1.35, armLZ:-0.18, armRZ:0.18 });
-  addBox(0.17, 0.17, 0.17, 0, 1.08, 0, 0xf0a030);
-  addBox(0.19, 0.03, 0.19, 0, 1.175, 0, 0xd98c1f);
-});
-scene('高处取书', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(0.44, 2.2, 1.55, 0.94, 1.1, -0.25, 0x8b6f47);
-  for (let i = 0; i < 4; i++) addBox(0.4, 0.03, 1.45, 0.94, 0.5 + i*0.5, -0.25, 0x74593a);
-  addBox(0.07, 0.32, 0.23, 0.76, 1.86, -0.05, 0xd94f4f);
-  addBox(0.07, 0.30, 0.22, 0.76, 1.52, -0.05, 0x4f8bd9);
-  addBox(0.07, 0.28, 0.21, 0.76, 1.18, -0.05, 0x4fd97a);
-  setPose(T, { x:0.46, z:0.28, armLX:-2.45, armRX:-2.45, armLZ:-0.12, armRZ:0.12, headX:-0.12 });
-  setPose(S, { x:-0.26, z:0.36, headX:-0.16 });
-});
-scene('冰箱拿零食', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(0.8, 1.98, 0.75, 0.8, 0.99, -0.15, 0xdcdfe3);
-  addBox(0.04, 1.78, 0.68, 0.38, 1.0, 0.21, 0xc4c9cf, [0,0.9,0]);
-  addBox(0.62, 0.04, 0.58, 0.8, 1.28, -0.15, 0xb9bfc6);
-  addBox(0.62, 0.04, 0.58, 0.8, 0.82, -0.15, 0xb9bfc6);
-  addBox(0.12, 0.2, 0.12, 0.74, 1.38, -0.15, 0xe85d5d);
-  addBox(0.12, 0.2, 0.12, 0.92, 1.38, -0.15, 0x5d8ce8);
-  addBox(0.14, 0.16, 0.14, 0.74, 0.94, -0.15, 0x7ecb8b);
-  setPose(T, { x:0.14, z:0.32, armLX:-1.55, armRX:-1.55, armLZ:-0.24, armRZ:0.24, headX:0.05 });
-  setPose(S, { x:-0.32, z:0.38, headX:-0.05 });
-});
-scene('挂画贴饰', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(3.4, 2.9, 0.09, 0, 1.45, -0.62, 0xe2ddd3);
-  addBox(0.72, 0.94, 0.05, 0.2, 1.88, -0.56, 0xc9a227);
-  addBox(0.62, 0.84, 0.04, 0.2, 1.88, -0.53, 0x9bc9e8);
-  setPose(T, { x:0.2, z:-0.34, armLX:-2.25, armRX:-2.25, armLZ:-0.14, armRZ:0.14, headX:-0.14 });
-  setPose(S, { x:-0.58, z:-0.06, headX:-0.16, rotY:0.35 });
-});
-scene('收取衣架', (A,B) => {
-  const [T,S] = order(A,B);
-  addCyl(0.022, 0.022, 2.6, 0, 2.1, -0.36, 0x9aa3ad, [0,0,HP]);
-  addCyl(0.03, 0.03, 2.0, -1.25, 1.0, -0.36, 0x9aa3ad);
-  addCyl(0.03, 0.03, 2.0, 1.25, 1.0, -0.36, 0x9aa3ad);
-  addTorus(0.11, 0.012, 0.1, 1.96, -0.36, 0xbfc4cc);
-  addBox(0.34, 0.5, 0.04, 0.1, 1.66, -0.36, 0x6d8fb8);
-  addBox(0.36, 0.12, 0.05, 0.1, 1.94, -0.36, 0xbfc4cc);
-  setPose(T, { x:0.16, z:0.06, armLX:-2.35, armRX:-2.35, armLZ:-0.1, armRZ:0.1, headX:-0.16 });
-  setPose(S, { x:-0.46, z:0.14, headX:-0.12, rotY:0.25 });
-});
-scene('更换灯泡', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(2.6, 0.12, 0.35, 0, 2.65, 0, 0xdadada);
-  addCyl(0.012, 0.012, 0.34, 0.2, 2.45, 0, 0x555555);
-  addSphere(0.1, 0.2, 2.31, 0, 0xfff4c0, 0xfff4c0);
-  addBox(0.46, 0.06, 0.46, -0.1, 0.45, 0, 0xa8763e);
-  for (const [px, pz] of [[-0.26,-0.16],[0.06,-0.16],[-0.26,0.16],[0.06,0.16]])
-    addCyl(0.03, 0.03, 0.45, px, 0.225, pz, 0x8a5f2e);
-  setPose(T, { x:-0.1, y:0.48, armLX:-2.6, armRX:-2.6, armLZ:-0.12, armRZ:0.12, headX:-0.2 });
-  setPose(S, { x:-0.76, z:0.22, armLX:-1.5, armRX:-1.5, armLZ:-0.18, armRZ:0.18, headX:-0.1 });
-  addSphere(0.055, -0.66, 1.02, 0.3, 0xfff4c0, 0xfff4c0);
-});
-scene('开门锁', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(1.05, 2.2, 0.08, 0.1, 1.1, -0.58, 0xb08968);
-  addSphere(0.045, 0.52, 1.08, -0.52, 0xd8c8a8);
-  addCyl(0.014, 0.014, 0.1, 0.52, 1.08, -0.55, 0xb8a888, [HP,0,0]);
-  setPose(T, { x:0.08, z:-0.3, armRX:-1.35, armRZ:0.35, headX:0.05 });
-  setPose(S, { x:-0.56, z:-0.1, rotY:0.4, headX:-0.05 });
-});
-scene('吹头发', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.3, rotY:0.15 });
-  setPose(T, { x:0.42, z:0.12, rotY:-1.15, armLX:-1.7, armLZ:-0.3, armRX:-0.25, headX:0.05 });
-  const hx = 0.24, hy = 1.28, hz = 0.3;
-  addCyl(0.055, 0.045, 0.2, hx, hy, hz, 0x3a3f47, [0,0,HP]);
-  addBox(0.1, 0.16, 0.12, hx+0.02, hy-0.13, hz, 0x3a3f47);
-  addCyl(0.04, 0.055, 0.07, hx-0.13, hy, hz, 0x2a2f37, [0,0,HP]);
-});
-scene('共撑一把伞', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.3, rotY:0.1 });
-  setPose(T, { x:0.34, rotY:-0.1, armLX:-2.3, armLZ:-0.22, armRX:-0.3 });
-  const topY = T.height + 0.62;
-  const canopy = new THREE.Mesh(
-    new THREE.SphereGeometry(0.98, 22, 11, 0, Math.PI*2, 0, HP),
-    new THREE.MeshStandardMaterial({ color: 0xd94f4f, roughness: 0.82, side: THREE.DoubleSide })
-  );
-  canopy.position.set(0.02, topY, 0.05);
-  canopy.castShadow = true;
-  propGroup.add(canopy);
-  addCyl(0.016, 0.016, 1.5, 0.02, topY-0.75, 0.05, 0x6b6b6b);
-  addTorus(0.05, 0.012, 0.02, topY-1.48, 0.05, 0x6b6b6b, [HP,0,0]);
-  for (let i = 0; i < 26; i++) {
-    addCyl(0.004, 0.004, 0.13,
-      (Math.random()-0.5)*4.5, Math.random()*3+0.4, (Math.random()-0.5)*3.5,
-      0x9ec8e8, [0.12,0,0.12]);
-  }
-});
-scene('上下车', (A,B) => {
-  const [T,S] = order(A,B);
-  addBox(3.0, 0.62, 1.35, 0, 0.66, -1.05, 0x3b5b8c);
-  addBox(2.4, 0.46, 1.24, 0, 1.14, -1.05, 0x4a6ea8);
-  addBox(2.42, 0.04, 1.2, 0, 1.38, -1.05, 0x35507a);
-  addBox(0.72, 0.34, 0.88, -0.62, 0.52, -0.36, 0x2b4470);
-  for (const [wx, wz] of [[-1.0,-0.44],[1.0,-0.44],[-1.0,-1.66],[1.0,-1.66]])
-    addCyl(0.22, 0.22, 0.14, wx, 0.24, wz, 0x22252b, [HP,0,0]);
-  setPose(S, { x:0.34, z:0.3, rotY:-0.5, armRX:-0.9, armRZ:0.2 });
-  setPose(T, { x:0.1, z:-0.36, y:0.32, rotY:-0.5, armLX:-0.8, armRX:-0.8 });
-});
-scene('过马路护行', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.3, armLX:0.2, armRX:-0.2, legLX:-0.15, legRX:0.15 });
-  setPose(T, { x:0.36, rotY:-0.28, armLX:-1.25, armLZ:-0.9, armRX:0.3, legLX:0.15, legRX:-0.15, headY:-0.22 });
-});
-scene('拥抱', (A,B) => {
-  setPose(A, { x:-0.24, armLX:-1.45, armLZ:0.62, armRX:-1.45, armRZ:-0.62, headX:-0.05 });
-  setPose(B, { x:0.24, rotY:Math.PI, armLX:-1.45, armLZ:0.62, armRX:-1.45, armRZ:-0.62, headX:0.08 });
-});
-scene('摸头', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.26, rotY:0.2 });
-  setPose(T, { x:0.34, rotY:-0.85, armLX:-2.1, armLZ:-0.95, armRX:0.2, headX:0.16, headY:-0.2 });
-});
-scene('戴帽子', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.22, rotY:0.1 });
-  setPose(T, { x:0.36, rotY:-0.95, armLX:-2.0, armLZ:-0.85, armRX:0.15, headX:0.14 });
-  const capY = S.height - 0.02;
-  addCyl(0.135, 0.145, 0.13, -0.22, capY+0.06, 0, 0xd94f4f);
-  addCyl(0.2, 0.2, 0.02, -0.12, capY+0.005, 0, 0xc43e3e, [0,0,0.16]);
-});
-scene('系围巾整理衣领', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.22, rotY:0.12, headX:-0.06 });
-  setPose(T, { x:0.32, z:0.05, rotY:-1.0, armLX:-1.5, armLZ:-0.35, armRX:-1.5, armRZ:0.35, headX:0.2 });
-  const nY = S.height*0.865;
-  addTorus(0.1, 0.036, -0.22, nY, 0, 0xe0a23c, [HP,0,0]);
-  addBox(0.11, 0.32, 0.07, -0.22, nY-0.2, 0.1, 0xe0a23c);
-});
-scene('耳边耳语', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.2, rotY:0.25 });
-  setPose(T, { x:0.3, z:-0.12, rotY:-1.15, lean:0.38, headX:0.22, headY:0.28, armLX:-1.1, armLZ:-0.5, armRX:0.2 });
-});
-scene('靠肩', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.2, z:0.06, rotY:0.18, tilt:-0.3, headX:-0.12, headY:0.35 });
-  setPose(T, { x:0.24, rotY:-0.12, armLX:-0.85, armLZ:-0.85, armRX:0.15, headY:-0.3 });
-});
-scene('下巴搁头顶', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.08, rotY:0.12 });
-  setPose(T, { x:0.34, z:-0.08, rotY:-1.05, lean:0.42, headX:0.38, armLX:-1.35, armLZ:-0.75, armRX:0.15 });
-});
-scene('对视', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.34, rotY:HP, headX:-0.3 });
-  setPose(T, { x:0.34, rotY:-HP, headX:0.34 });
-});
-scene('额头相贴', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.2, rotY:HP, headX:-0.32, armLX:-0.9, armLZ:0.4 });
-  setPose(T, { x:0.2, rotY:-HP, headX:0.36, armLX:-0.9, armLZ:-0.4 });
-});
-scene('推眼镜', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.22, rotY:0.15 });
-  setPose(T, { x:0.3, rotY:-1.05, armLX:-1.75, armLZ:-0.72, armRX:0.15, headX:0.16 });
-  const gy = S.height*0.9325 + 0.005, gx = -0.22, gz = 0.064;
-  addTorus(0.048, 0.007, gx-0.045, gy, gz, 0x24282e);
-  addTorus(0.048, 0.007, gx+0.045, gy, gz, 0x24282e);
-  addBox(0.03, 0.008, 0.008, gx, gy, gz-0.005, 0x24282e);
-  addBox(0.008, 0.008, 0.09, gx-0.09, gy, gz-0.045, 0x24282e);
-  addBox(0.008, 0.008, 0.09, gx+0.09, gy, gz-0.045, 0x24282e);
-});
-scene('自拍同框', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.32, z:0.06, rotY:0.1 });
-  setPose(T, { x:0.3, rotY:-0.1, armRX:-2.25, armRZ:0.35, armLX:0.1, headX:-0.1 });
-  const px = 0.76, py = T.height*0.88 + 0.42, pz = 0.24;
-  addBox(0.075, 0.15, 0.012, px, py, pz, 0x1b1f26, [0,-0.5,0.35]);
-  addBox(0.068, 0.135, 0.004, px+0.002, py+0.002, pz+0.008, 0x5b8cd9, [0,-0.5,0.35]);
-});
-scene('手提袋子同行', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(S, { x:-0.3, armLX:0.2, armRX:-0.2, legLX:-0.16, legRX:0.16 });
-  setPose(T, { x:0.34, armLX:-0.2, armRX:0.15, legLX:0.16, legRX:-0.16 });
-  const bx = 0.34+0.26, by = T.height*0.55;
-  addBox(0.2, 0.24, 0.13, bx, by, 0.05, 0xe85d5d);
-  addTorus(0.07, 0.01, bx, by+0.15, 0.05, 0xe85d5d, [0,HP,0]);
-});
-scene('举高物品打闹', (A,B) => {
-  const [T,S] = order(A,B);
-  setPose(T, { x:0.32, rotY:-0.5, armLX:-2.7, armLZ:-0.15, armRX:-2.7, armRZ:0.15, headX:-0.1 });
-  setPose(S, { x:-0.34, z:0.12, rotY:0.35, armLX:-2.4, armLZ:-0.2, armRX:-2.4, armRZ:0.2, headX:-0.25, legLX:0.3, legRX:-0.3 });
-  addBox(0.2, 0.2, 0.2, 0.32, T.height+0.3, 0.06, 0xf0a030);
-  addBox(0.21, 0.03, 0.21, 0.32, T.height+0.41, 0.06, 0xd98c1f);
-});
-scene('共穿一件外套', (A,B) => {
-  setPose(A, { x:-0.26, rotY:0.06 });
-  setPose(B, { x:0.26, rotY:-0.06 });
-  const cy = Math.max(A.height, B.height)*0.70;
-  const coat = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.54, 0.6, 0.74, 22, 1, true),
-    new THREE.MeshStandardMaterial({ color: 0x3f6fb5, roughness: 0.9, side: THREE.DoubleSide })
-  );
-  coat.position.set(0, cy, 0);
-  coat.castShadow = true;
-  propGroup.add(coat);
-  const collar = new THREE.Mesh(
-    new THREE.TorusGeometry(0.44, 0.07, 10, 26),
-    new THREE.MeshStandardMaterial({ color: 0x355d99, roughness: 0.9 })
-  );
-  collar.rotation.x = HP;
-  collar.position.set(0, cy+0.37, 0);
-  collar.castShadow = true;
-  propGroup.add(collar);
-});
-scene('并排看影子', (A,B) => {
-  setPose(A, { x:-0.3, rotY:0.1, headX:-0.1 });
-  setPose(B, { x:0.3, rotY:-0.1, headX:-0.1 });
-  const s1 = addPlane(1.0, 2.6, -0.3+1.3, 0.006, 1.3, 0x2a3240, 0.32, [-HP,0,0]);
-  s1.scale.set(0.75, 1, 1);
-  const s2 = addPlane(1.0, 2.6, 0.3+1.3, 0.006, 1.3, 0x2a3240, 0.32, [-HP,0,0]);
-  s2.scale.set(0.75, 1, 1);
-  addPlane(0.7, 0.5, -0.3, 0.005, 0.05, 0x2a3240, 0.28, [-HP,0,0]);
-  addPlane(0.7, 0.5, 0.3, 0.005, 0.05, 0x2a3240, 0.28, [-HP,0,0]);
-});
-
-/* ===== 应用场景 ===== */
-function applyScene() {
-  clearProps();
-  chars.forEach(c => setPose(c, {}));
-  const [A, B] = chars;
-  if (A && B) {
-    const sc = SCENES[state.sceneIndex];
-    sc.build(A, B);
-    document.getElementById('sceneName').textContent = sc.name;
-  }
-  for (let i = 2; i < chars.length; i++) {
-    setPose(chars[i], { x:(i-2)*1.0 + 2.6, z:1.4, rotY:Math.PI });
-  }
-  scene.updateMatrixWorld(true);
-  chars.forEach(c => positionLabel(c));
-}
-
-/* ===== 角色增删 ===== */
-function buildAndAdd(ch) {
-  if (ch.group) { scene.remove(ch.group); disposeObj(ch.group); }
-  ch.group = buildCharacter(ch);
-  ch.group.scale.setScalar(ch.height);
-  scene.add(ch.group);
-  updateLabel(ch);
-}
-function rebuild(ch) { buildAndAdd(ch); applyScene(); }
-function addChar() {
-  if (chars.length >= 6) return;
-  const n = chars.length;
-  const ch = makeChar({
-    name: '角色' + String.fromCharCode(65 + n),
-    gender: n % 2 === 0 ? 'male' : 'female',
-    height: n % 2 === 0 ? 1.62 + Math.random()*0.1 : 1.78 + Math.random()*0.1,
-    skinColor: SKIN_COLORS[n % SKIN_COLORS.length]
+  scene('上下车', (A,B) => {
+    const [T,S] = order(A,B);
+    addBox(3.0, 0.62, 1.35, 0, 0.66, -1.05, 0x3b5b8c);
+    addBox(2.4, 0.46, 1.24, 0, 1.14, -1.05, 0x4a6ea8);
+    addBox(2.42, 0.04, 1.2, 0, 1.38, -1.05, 0x35507a);
+    addBox(0.72, 0.34, 0.88, -0.62, 0.52, -0.36, 0x2b4470);
+    for (const [wx, wz] of [[-1.0,-0.44],[1.0,-0.44],[-1.0,-1.66],[1.0,-1.66]])
+      addCyl(0.22, 0.22, 0.14, wx, 0.24, wz, 0x22252b, [HP,0,0]);
+    setPose(S, { x:0.34, z:0.3, rotY:-0.5, armRX:-0.9, armRZ:0.2 });
+    setPose(T, { x:0.1, z:-0.36, y:0.32, rotY:-0.5, armLX:-0.8, armRX:-0.8 });
   });
-  chars.push(ch);
-  buildAndAdd(ch);
+  scene('过马路护行', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.3, armLX:0.2, armRX:-0.2, legLX:-0.15, legRX:0.15 });
+    setPose(T, { x:0.36, rotY:-0.28, armLX:-1.25, armLZ:-0.9, armRX:0.3, legLX:0.15, legRX:-0.15, headY:-0.22 });
+  });
+  scene('拥抱', (A,B) => {
+    setPose(A, { x:-0.24, armLX:-1.45, armLZ:0.62, armRX:-1.45, armRZ:-0.62, headX:-0.05 });
+    setPose(B, { x:0.24, rotY:Math.PI, armLX:-1.45, armLZ:0.62, armRX:-1.45, armRZ:-0.62, headX:0.08 });
+  });
+  scene('摸头', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.26, rotY:0.2 });
+    setPose(T, { x:0.34, rotY:-0.85, armLX:-2.1, armLZ:-0.95, armRX:0.2, headX:0.16, headY:-0.2 });
+  });
+  scene('戴帽子', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.22, rotY:0.1 });
+    setPose(T, { x:0.36, rotY:-0.95, armLX:-2.0, armLZ:-0.85, armRX:0.15, headX:0.14 });
+    const capY = S.height - 0.02;
+    addCyl(0.135, 0.145, 0.13, -0.22, capY+0.06, 0, 0xd94f4f);
+    addCyl(0.2, 0.2, 0.02, -0.12, capY+0.005, 0, 0xc43e3e, [0,0,0.16]);
+  });
+  scene('系围巾整理衣领', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.22, rotY:0.12, headX:-0.06 });
+    setPose(T, { x:0.32, z:0.05, rotY:-1.0, armLX:-1.5, armLZ:-0.35, armRX:-1.5, armRZ:0.35, headX:0.2 });
+    const nY = S.height*0.865;
+    addTorus(0.1, 0.036, -0.22, nY, 0, 0xe0a23c, [HP,0,0]);
+    addBox(0.11, 0.32, 0.07, -0.22, nY-0.2, 0.1, 0xe0a23c);
+  });
+  scene('耳边耳语', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.2, rotY:0.25 });
+    setPose(T, { x:0.3, z:-0.12, rotY:-1.15, lean:0.38, headX:0.22, headY:0.28, armLX:-1.1, armLZ:-0.5, armRX:0.2 });
+  });
+  scene('靠肩', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.2, z:0.06, rotY:0.18, tilt:-0.3, headX:-0.12, headY:0.35 });
+    setPose(T, { x:0.24, rotY:-0.12, armLX:-0.85, armLZ:-0.85, armRX:0.15, headY:-0.3 });
+  });
+  scene('下巴搁头顶', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.08, rotY:0.12 });
+    setPose(T, { x:0.34, z:-0.08, rotY:-1.05, lean:0.42, headX:0.38, armLX:-1.35, armLZ:-0.75, armRX:0.15 });
+  });
+  scene('对视', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.34, rotY:HP, headX:-0.3 });
+    setPose(T, { x:0.34, rotY:-HP, headX:0.34 });
+  });
+  scene('额头相贴', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.2, rotY:HP, headX:-0.32, armLX:-0.9, armLZ:0.4 });
+    setPose(T, { x:0.2, rotY:-HP, headX:0.36, armLX:-0.9, armLZ:-0.4 });
+  });
+  scene('推眼镜', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.22, rotY:0.15 });
+    setPose(T, { x:0.3, rotY:-1.05, armLX:-1.75, armLZ:-0.72, armRX:0.15, headX:0.16 });
+    const gy = S.height*0.9325 + 0.005, gx = -0.22, gz = 0.064;
+    addTorus(0.048, 0.007, gx-0.045, gy, gz, 0x24282e);
+    addTorus(0.048, 0.007, gx+0.045, gy, gz, 0x24282e);
+    addBox(0.03, 0.008, 0.008, gx, gy, gz-0.005, 0x24282e);
+    addBox(0.008, 0.008, 0.09, gx-0.09, gy, gz-0.045, 0x24282e);
+    addBox(0.008, 0.008, 0.09, gx+0.09, gy, gz-0.045, 0x24282e);
+  });
+  scene('自拍同框', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.32, z:0.06, rotY:0.1 });
+    setPose(T, { x:0.3, rotY:-0.1, armRX:-2.25, armRZ:0.35, armLX:0.1, headX:-0.1 });
+    const px = 0.76, py = T.height*0.88 + 0.42, pz = 0.24;
+    addBox(0.075, 0.15, 0.012, px, py, pz, 0x1b1f26, [0,-0.5,0.35]);
+    addBox(0.068, 0.135, 0.004, px+0.002, py+0.002, pz+0.008, 0x5b8cd9, [0,-0.5,0.35]);
+  });
+  scene('手提袋子同行', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(S, { x:-0.3, armLX:0.2, armRX:-0.2, legLX:-0.16, legRX:0.16 });
+    setPose(T, { x:0.34, armLX:-0.2, armRX:0.15, legLX:0.16, legRX:-0.16 });
+    const bx = 0.34+0.26, by = T.height*0.55;
+    addBox(0.2, 0.24, 0.13, bx, by, 0.05, 0xe85d5d);
+    addTorus(0.07, 0.01, bx, by+0.15, 0.05, 0xe85d5d, [0,HP,0]);
+  });
+  scene('举高物品打闹', (A,B) => {
+    const [T,S] = order(A,B);
+    setPose(T, { x:0.32, rotY:-0.5, armLX:-2.7, armLZ:-0.15, armRX:-2.7, armRZ:0.15, headX:-0.1 });
+    setPose(S, { x:-0.34, z:0.12, rotY:0.35, armLX:-2.4, armLZ:-0.2, armRX:-2.4, armRZ:0.2, headX:-0.25, legLX:0.3, legRX:-0.3 });
+    addBox(0.2, 0.2, 0.2, 0.32, T.height+0.3, 0.06, 0xf0a030);
+    addBox(0.21, 0.03, 0.21, 0.32, T.height+0.41, 0.06, 0xd98c1f);
+  });
+  scene('共穿一件外套', (A,B) => {
+    setPose(A, { x:-0.26, rotY:0.06 });
+    setPose(B, { x:0.26, rotY:-0.06 });
+    const cy = Math.max(A.height, B.height)*0.70;
+    const coat = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.54, 0.6, 0.74, 22, 1, true),
+      new THREE.MeshStandardMaterial({ color: 0x3f6fb5, roughness: 0.9, side: THREE.DoubleSide })
+    );
+    coat.position.set(0, cy, 0);
+    coat.castShadow = true;
+    propGroup.add(coat);
+    const collar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.44, 0.07, 10, 26),
+      new THREE.MeshStandardMaterial({ color: 0x355d99, roughness: 0.9 })
+    );
+    collar.rotation.x = HP;
+    collar.position.set(0, cy+0.37, 0);
+    collar.castShadow = true;
+    propGroup.add(collar);
+  });
+  scene('并排看影子', (A,B) => {
+    setPose(A, { x:-0.3, rotY:0.1, headX:-0.1 });
+    setPose(B, { x:0.3, rotY:-0.1, headX:-0.1 });
+    const s1 = addPlane(1.0, 2.6, -0.3+1.3, 0.006, 1.3, 0x2a3240, 0.32, [-HP,0,0]);
+    s1.scale.set(0.75, 1, 1);
+    const s2 = addPlane(1.0, 2.6, 0.3+1.3, 0.006, 1.3, 0x2a3240, 0.32, [-HP,0,0]);
+    s2.scale.set(0.75, 1, 1);
+    addPlane(0.7, 0.5, -0.3, 0.005, 0.05, 0x2a3240, 0.28, [-HP,0,0]);
+    addPlane(0.7, 0.5, 0.3, 0.005, 0.05, 0x2a3240, 0.28, [-HP,0,0]);
+  });
+
+  /* ========== 7. 应用场景 ========== */
+  function applyScene() {
+    clearProps();
+    chars.forEach(c => setPose(c, {}));
+    const [A, B] = chars;
+    if (A && B) {
+      const sc = SCENES[state.sceneIndex];
+      sc.build(A, B);
+      document.getElementById('sceneName').textContent = sc.name;
+    }
+    for (let i = 2; i < chars.length; i++) {
+      setPose(chars[i], { x:(i-2)*1.0 + 2.6, z:1.4, rotY:Math.PI });
+    }
+    scene.updateMatrixWorld(true);
+    chars.forEach(c => positionLabel(c));
+  }
+
+  /* ========== 8. 角色增删 ========== */
+  function buildAndAdd(ch) {
+    if (ch.group) { scene.remove(ch.group); disposeObj(ch.group); }
+    ch.group = buildCharacter(ch);
+    ch.group.scale.setScalar(ch.height);
+    scene.add(ch.group);
+    updateLabel(ch);
+  }
+  function rebuild(ch) { buildAndAdd(ch); applyScene(); }
+  function addChar() {
+    if (chars.length >= 6) return;
+    const n = chars.length;
+    const ch = makeChar({
+      name: '角色' + String.fromCharCode(65 + n),
+      gender: n % 2 === 0 ? 'male' : 'female',
+      height: n % 2 === 0 ? 1.62 + Math.random()*0.1 : 1.78 + Math.random()*0.1,
+      skinColor: SKIN_COLORS[n % SKIN_COLORS.length]
+    });
+    chars.push(ch);
+    buildAndAdd(ch);
+    applyScene();
+    renderUI();
+    refreshSelect();
+  }
+  function removeChar(ch) {
+    if (chars.length <= 2) return;
+    const i = chars.indexOf(ch);
+    if (i < 0) return;
+    chars.splice(i, 1);
+    if (ch.group) { scene.remove(ch.group); disposeObj(ch.group); ch.group = null; }
+    if (ch.label) {
+      scene.remove(ch.label);
+      ch.label.material.map.dispose();
+      ch.label.material.dispose();
+      ch.label = null;
+    }
+    if (state.activeId === ch.id && chars.length) state.activeId = chars[0].id;
+    applyScene(); renderUI(); refreshSelect();
+  }
+
+  /* ========== 9. UI ========== */
+  const charListEl = document.getElementById('charList');
+  const activeSelEl = document.getElementById('activeSel');
+  const sceneSelEl = document.getElementById('sceneSel');
+  const addBtn = document.getElementById('addBtn');
+  const modeSeg = document.getElementById('modeSeg');
+
+  SCENES.forEach((sc, i) => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = sc.name;
+    sceneSelEl.appendChild(o);
+  });
+  sceneSelEl.addEventListener('change', () => {
+    state.sceneIndex = parseInt(sceneSelEl.value, 10);
+    applyScene();
+  });
+
+  function makeRow(t) {
+    const r = document.createElement('div');
+    r.className = 'row';
+    const l = document.createElement('span');
+    l.className = 'lbl'; l.textContent = t;
+    r.appendChild(l);
+    return r;
+  }
+
+  function renderUI() {
+    charListEl.innerHTML = '';
+    chars.forEach(ch => {
+      const card = document.createElement('div');
+      card.className = 'card' + (ch.id === state.activeId ? ' active' : '');
+      const head = document.createElement('div');
+      head.className = 'card-head';
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = ch.gender === 'female' ? '#e07a9f' : '#5b8dd6';
+      const nameInput = document.createElement('input');
+      nameInput.className = 'name-input';
+      nameInput.value = ch.name;
+      nameInput.maxLength = 12;
+      nameInput.addEventListener('input', () => {
+        ch.name = nameInput.value || '角色';
+        updateLabel(ch);
+        refreshSelect();
+        scene.updateMatrixWorld(true);
+        positionLabel(ch);
+      });
+      nameInput.addEventListener('focus', () => setActive(ch.id));
+      head.append(dot, nameInput);
+      if (chars.length > 2) {
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'del'; del.textContent = '×';
+        del.title = '删除该角色';
+        del.addEventListener('click', () => removeChar(ch));
+        head.appendChild(del);
+      }
+      card.appendChild(head);
+
+      const rowG = makeRow('性别');
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      [['male','男'],['female','女']].forEach(([val, text]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = text;
+        if (ch.gender === val) b.classList.add('on');
+        b.addEventListener('click', () => {
+          if (ch.gender === val) return;
+          ch.gender = val;
+          rebuild(ch);
+          renderUI();
+        });
+        seg.appendChild(b);
+      });
+      rowG.appendChild(seg);
+      card.appendChild(rowG);
+
+      const rowH = makeRow('身高');
+      const range = document.createElement('input');
+      range.type = 'range';
+      range.min = 120; range.max = 230; range.step = 1;
+      range.value = Math.round(ch.height*100);
+      const hval = document.createElement('span');
+      hval.className = 'hval';
+      hval.textContent = Math.round(ch.height*100) + 'cm';
+      let rafId = 0;
+      range.addEventListener('input', () => {
+        const cm = parseInt(range.value, 10);
+        hval.textContent = cm + 'cm';
+        ch.height = cm / 100;
+        if (ch.group) ch.group.scale.setScalar(ch.height);
+        updateLabel(ch);
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => { rafId = 0; applyScene(); });
+      });
+      rowH.append(range, hval);
+      card.appendChild(rowH);
+
+      const rowF = makeRow('脸图');
+      const fileLabel = document.createElement('label');
+      fileLabel.className = 'file-btn';
+      fileLabel.textContent = ch.faceImage ? '更换图片' : '上传图片';
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.hidden = true;
+      fileInput.addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { ch.faceImage = img; rebuild(ch); renderUI(); URL.revokeObjectURL(url); };
+        img.onerror = () => URL.revokeObjectURL(url);
+        img.src = url;
+      });
+      fileLabel.appendChild(fileInput);
+      const resetBtn = document.createElement('button');
+      resetBtn.type = 'button';
+      resetBtn.className = 'fr'; resetBtn.textContent = '默认';
+      resetBtn.addEventListener('click', () => { ch.faceImage = null; rebuild(ch); renderUI(); });
+      rowF.append(fileLabel, resetBtn);
+      card.appendChild(rowF);
+
+      card.addEventListener('mousedown', e => {
+        const t = e.target.tagName;
+        if (t === 'INPUT' || t === 'BUTTON' || t === 'LABEL' || t === 'OPTION' || t === 'SELECT') return;
+        setActive(ch.id);
+      });
+      charListEl.appendChild(card);
+    });
+    addBtn.disabled = chars.length >= 6;
+  }
+
+  function refreshSelect() {
+    activeSelEl.innerHTML = '';
+    chars.forEach(ch => {
+      const o = document.createElement('option');
+      o.value = ch.id;
+      o.textContent = `${ch.name}（${Math.round(ch.height*100)}cm）`;
+      if (ch.id === state.activeId) o.selected = true;
+      activeSelEl.appendChild(o);
+    });
+  }
+  function setActive(id) {
+    state.activeId = id;
+    refreshSelect();
+    document.querySelectorAll('.card').forEach((c, i) => {
+      c.classList.toggle('active', chars[i] && chars[i].id === id);
+    });
+  }
+  activeSelEl.addEventListener('change', () => setActive(parseInt(activeSelEl.value, 10)));
+  modeSeg.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-mode]');
+    if (!btn) return;
+    state.mode = btn.dataset.mode;
+    modeSeg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  });
+  addBtn.addEventListener('click', addChar);
+
+  /* ========== 10. 相机交互 ========== */
+  let dragging = false, lastX = 0, lastY = 0;
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  canvas.addEventListener('pointerdown', e => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    state.yaw += dx * 0.0055;
+    state.pitch = clamp(state.pitch - dy * 0.0055, -0.85, 1.25);
+  });
+  canvas.addEventListener('pointerup', e => {
+    dragging = false;
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  canvas.addEventListener('pointercancel', () => { dragging = false; });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.dist = clamp(state.dist * (1 + Math.sign(e.deltaY) * 0.10), 0.6, 8);
+  }, { passive: false });
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  /* ========== 11. 相机更新 ========== */
+  const HEAD_CENTER_Y = 1 - BODY.headH/2;
+  function updateCamera() {
+    const ch = chars.find(c => c.id === state.activeId) || chars[0];
+    if (!ch || !ch.group) return;
+    chars.forEach(c => { if (c.group) c.group.userData.headMesh.visible = true; });
+    const h = ch.height, p = ch.group.position;
+    const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
+    const dir = new THREE.Vector3(Math.sin(state.yaw)*cp, sp, Math.cos(state.yaw)*cp);
+    if (state.mode === 'first') {
+      ch.group.userData.headMesh.visible = false;
+      const eyeY = p.y + HEAD_CENTER_Y * h;
+      camera.position.set(p.x, eyeY, p.z);
+      camera.lookAt(p.x + dir.x, eyeY + dir.y, p.z + dir.z);
+    } else {
+      const target = new THREE.Vector3(p.x, p.y + HEAD_CENTER_Y*h, p.z);
+      camera.position.copy(target).addScaledVector(dir, state.dist * h);
+      camera.lookAt(target);
+    }
+    chars.forEach(c => {
+      if (!c.label) return;
+      c.label.visible = !(state.mode === 'first' && c.id === state.activeId);
+    });
+  }
+
+  /* ========== 12. 循环 / 初始化 ========== */
+  function animate() {
+    requestAnimationFrame(animate);
+    scene.updateMatrixWorld(true);
+    chars.forEach(c => { if (c.label) positionLabel(c); });
+    updateCamera();
+    renderer.render(scene, camera);
+  }
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  const chA = makeChar({ name: '角色A', gender: 'male', height: 1.85, skinColor: SKIN_COLORS[0] });
+  const chB = makeChar({ name: '角色B', gender: 'female', height: 1.52, skinColor: SKIN_COLORS[1] });
+  chars.push(chA, chB);
+  state.activeId = chA.id;
+  buildAndAdd(chA);
+  buildAndAdd(chB);
   applyScene();
   renderUI();
   refreshSelect();
-}
-function removeChar(ch) {
-  if (chars.length <= 2) return;
-  const i = chars.indexOf(ch);
-  if (i < 0) return;
-  chars.splice(i, 1);
-  if (ch.group) { scene.remove(ch.group); disposeObj(ch.group); ch.group = null; }
-  if (ch.label) {
-    scene.remove(ch.label);
-    ch.label.material.map.dispose();
-    ch.label.material.dispose();
-    ch.label = null;
-  }
-  if (state.activeId === ch.id && chars.length) state.activeId = chars[0].id;
-  applyScene(); renderUI(); refreshSelect();
-}
+  animate();
 
-/* ===== UI ===== */
-const charListEl = document.getElementById('charList');
-const activeSelEl = document.getElementById('activeSel');
-const sceneSelEl = document.getElementById('sceneSel');
-const addBtn = document.getElementById('addBtn');
-const modeSeg = document.getElementById('modeSeg');
-
-SCENES.forEach((sc, i) => {
-  const o = document.createElement('option');
-  o.value = i; o.textContent = sc.name;
-  sceneSelEl.appendChild(o);
-});
-sceneSelEl.addEventListener('change', () => {
-  state.sceneIndex = parseInt(sceneSelEl.value, 10);
-  applyScene();
-});
-
-function makeRow(t) {
-  const r = document.createElement('div');
-  r.className = 'row';
-  const l = document.createElement('span');
-  l.className = 'lbl'; l.textContent = t;
-  r.appendChild(l);
-  return r;
-}
-
-function renderUI() {
-  charListEl.innerHTML = '';
-  chars.forEach(ch => {
-    const card = document.createElement('div');
-    card.className = 'card' + (ch.id === state.activeId ? ' active' : '');
-    const head = document.createElement('div');
-    head.className = 'card-head';
-    const dot = document.createElement('span');
-    dot.className = 'dot';
-    dot.style.background = ch.gender === 'female' ? '#e07a9f' : '#5b8dd6';
-    const nameInput = document.createElement('input');
-    nameInput.className = 'name-input';
-    nameInput.value = ch.name;
-    nameInput.maxLength = 12;
-    nameInput.addEventListener('input', () => {
-      ch.name = nameInput.value || '角色';
-      updateLabel(ch);
-      refreshSelect();
-      scene.updateMatrixWorld(true);
-      positionLabel(ch);
-    });
-    nameInput.addEventListener('focus', () => setActive(ch.id));
-    head.append(dot, nameInput);
-    if (chars.length > 2) {
-      const del = document.createElement('button');
-      del.className = 'del'; del.textContent = '×';
-      del.title = '删除该角色';
-      del.addEventListener('click', () => removeChar(ch));
-      head.appendChild(del);
-    }
-    card.appendChild(head);
-
-    const rowG = makeRow('性别');
-    const seg = document.createElement('div');
-    seg.className = 'seg';
-    [['male','男'],['female','女']].forEach(([val, text]) => {
-      const b = document.createElement('button');
-      b.textContent = text;
-      if (ch.gender === val) b.classList.add('on');
-      b.addEventListener('click', () => {
-        if (ch.gender === val) return;
-        ch.gender = val;
-        rebuild(ch);
-        renderUI();
-      });
-      seg.appendChild(b);
-    });
-    rowG.appendChild(seg);
-    card.appendChild(rowG);
-
-    const rowH = makeRow('身高');
-    const range = document.createElement('input');
-    range.type = 'range';
-    range.min = 120; range.max = 230; range.step = 1;
-    range.value = Math.round(ch.height*100);
-    const hval = document.createElement('span');
-    hval.className = 'hval';
-    hval.textContent = Math.round(ch.height*100) + 'cm';
-    let rafId = 0;
-    range.addEventListener('input', () => {
-      const cm = parseInt(range.value, 10);
-      hval.textContent = cm + 'cm';
-      ch.height = cm / 100;
-      if (ch.group) ch.group.scale.setScalar(ch.height);
-      updateLabel(ch);
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => { rafId = 0; applyScene(); });
-    });
-    rowH.append(range, hval);
-    card.appendChild(rowH);
-
-    const rowF = makeRow('脸图');
-    const fileLabel = document.createElement('label');
-    fileLabel.className = 'file-btn';
-    fileLabel.textContent = ch.faceImage ? '更换图片' : '上传图片';
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.hidden = true;
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => { ch.faceImage = img; rebuild(ch); renderUI(); URL.revokeObjectURL(url); };
-      img.onerror = () => URL.revokeObjectURL(url);
-      img.src = url;
-    });
-    fileLabel.appendChild(fileInput);
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'fr'; resetBtn.textContent = '默认';
-    resetBtn.addEventListener('click', () => { ch.faceImage = null; rebuild(ch); renderUI(); });
-    rowF.append(fileLabel, resetBtn);
-    card.appendChild(rowF);
-
-    card.addEventListener('mousedown', e => {
-      const t = e.target.tagName;
-      if (t === 'INPUT' || t === 'BUTTON' || t === 'LABEL' || t === 'OPTION') return;
-      setActive(ch.id);
-    });
-    charListEl.appendChild(card);
-  });
-  addBtn.disabled = chars.length >= 6;
-}
-
-function refreshSelect() {
-  activeSelEl.innerHTML = '';
-  chars.forEach(ch => {
-    const o = document.createElement('option');
-    o.value = ch.id;
-    o.textContent = `${ch.name}（${Math.round(ch.height*100)}cm）`;
-    if (ch.id === state.activeId) o.selected = true;
-    activeSelEl.appendChild(o);
-  });
-}
-function setActive(id) {
-  state.activeId = id;
-  refreshSelect();
-  document.querySelectorAll('.card').forEach((c, i) => {
-    c.classList.toggle('active', chars[i] && chars[i].id === id);
-  });
-}
-activeSelEl.addEventListener('change', () => setActive(parseInt(activeSelEl.value, 10)));
-modeSeg.addEventListener('click', e => {
-  const btn = e.target.closest('button[data-mode]');
-  if (!btn) return;
-  state.mode = btn.dataset.mode;
-  modeSeg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
-});
-addBtn.addEventListener('click', addChar);
-
-/* ===== 相机交互 ===== */
-let dragging = false, lastX = 0, lastY = 0;
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-canvas.addEventListener('pointerdown', e => {
-  dragging = true; lastX = e.clientX; lastY = e.clientY;
-  canvas.setPointerCapture(e.pointerId);
-});
-canvas.addEventListener('pointermove', e => {
-  if (!dragging) return;
-  const dx = e.clientX - lastX, dy = e.clientY - lastY;
-  lastX = e.clientX; lastY = e.clientY;
-  state.yaw += dx * 0.0055;
-  state.pitch = clamp(state.pitch - dy * 0.0055, -0.85, 1.25);
-});
-canvas.addEventListener('pointerup', e => {
-  dragging = false;
-  try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
-});
-canvas.addEventListener('pointercancel', () => { dragging = false; });
-canvas.addEventListener('wheel', e => {
-  e.preventDefault();
-  state.dist = clamp(state.dist * (1 + Math.sign(e.deltaY) * 0.10), 0.6, 8);
-}, { passive: false });
-function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-
-/* ===== 相机更新 ===== */
-const HEAD_CENTER_Y = 1 - BODY.headH/2;
-function updateCamera() {
-  const ch = chars.find(c => c.id === state.activeId) || chars[0];
-  if (!ch || !ch.group) return;
-  chars.forEach(c => { if (c.group) c.group.userData.headMesh.visible = true; });
-  const h = ch.height, p = ch.group.position;
-  const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
-  const dir = new THREE.Vector3(Math.sin(state.yaw)*cp, sp, Math.cos(state.yaw)*cp);
-  if (state.mode === 'first') {
-    ch.group.userData.headMesh.visible = false;
-    const eyeY = p.y + HEAD_CENTER_Y * h;
-    camera.position.set(p.x, eyeY, p.z);
-    camera.lookAt(p.x + dir.x, eyeY + dir.y, p.z + dir.z);
-  } else {
-    const target = new THREE.Vector3(p.x, p.y + HEAD_CENTER_Y*h, p.z);
-    camera.position.copy(target).addScaledVector(dir, state.dist * h);
-    camera.lookAt(target);
-  }
-  chars.forEach(c => {
-    if (!c.label) return;
-    c.label.visible = !(state.mode === 'first' && c.id === state.activeId);
-  });
-}
-
-/* ===== 循环 / 初始化 ===== */
-function animate() {
-  requestAnimationFrame(animate);
-  scene.updateMatrixWorld(true);
-  chars.forEach(c => { if (c.label) positionLabel(c); });
-  updateCamera();
-  renderer.render(scene, camera);
-}
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-const chA = makeChar({ name: '角色A', gender: 'male', height: 1.85, skinColor: SKIN_COLORS[0] });
-const chB = makeChar({ name: '角色B', gender: 'female', height: 1.52, skinColor: SKIN_COLORS[1] });
-chars.push(chA, chB);
-state.activeId = chA.id;
-buildAndAdd(chA);
-buildAndAdd(chB);
-applyScene();
-renderUI();
-refreshSelect();
-animate();
+  window.__appReady = true;
+})();
 </script>
 </body>
 </html>
